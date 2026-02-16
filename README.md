@@ -1,0 +1,1 @@
+# CrossTable - Chess Tournament Manager
