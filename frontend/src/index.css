@@ -1,3 +1,104 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+@config "../tailwind.config.ts";
+
+html {
+  scroll-behavior: smooth;
+}
+
+@layer base {
+  :root {
+    /* Background: #F8FAFC */
+    --background: 210 40% 98%;
+    /* Foreground (Text): #1E293B (Deep Navy) */
+    --foreground: 215 32% 17%;
+
+    /* Card: White or #F1F5F9 */
+    --card: 0 0% 100%;
+    --card-foreground: 215 32% 17%;
+
+    /* Popover: White */
+    --popover: 0 0% 100%;
+    --popover-foreground: 215 32% 17%;
+
+    /* Primary: #1E293B (Deep Navy) */
+    --primary: 215 32% 17%;
+    --primary-foreground: 210 40% 98%;
+
+    /* Secondary: #F1F5F9 (Surface Grey) */
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 215 32% 17%;
+
+    /* Muted: #94A3B8 (Soft Gray) */
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215 16% 47%;
+
+    /* Accent: #C5A059 (Muted Gold) */
+    --accent: 39 46% 56%;
+    --accent-foreground: 215 32% 17%;
+
+    /* Destructive: Standard Red */
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    /* Border: #E2E8F0 */
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+
+    /* Ring: Gold for focus states */
+    --ring: 39 46% 56%;
+
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    /* Background: #0B0F19 (Deep Midnight Navy) */
+    --background: 224 39% 7%;
+    /* Foreground: #FFFFFF */
+    --foreground: 210 40% 98%;
+
+    /* Card: #161B28 (Lighter Slate) */
+    --card: 223 29% 12%;
+    --card-foreground: 210 40% 98%;
+
+    /* Popover: #161B28 */
+    --popover: 223 29% 12%;
+    --popover-foreground: 210 40% 98%;
+
+    /* Primary: #C5A059*/
+    --primary: 39 46% 56%;
+    --primary-foreground: 224 39% 7%;
+
+    /* Secondary: #1E293B (Navy) */
+    --secondary: 217 19% 27%;
+    --secondary-foreground: 210 40% 98%;
+
+    /* Muted: #94A3B8 */
+    --muted: 217 19% 27%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    /* Accent: #C5A059 (Gold) */
+    --accent: 39 46% 56%;
+    --accent-foreground: 210 40% 98%;
+
+    /* Destructive */
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    /* Border: #2D3748 (Dark Slate) */
+    --border: 217 24% 23%;
+    --input: 217 24% 23%;
+
+    /* Ring: Gold */
+    --ring: 39 46% 56%;
+  }
+}
+
+@layer base {
+  * {
+    border-color: hsl(var(--border));
+  }
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+  }
+}
