@@ -1,5 +1,6 @@
 import { Logo } from "../components/Logo";
 import { ThemeToggle } from "../components/ThemeToggle";
+import { Link } from "react-router-dom";
 
 export default function Home() {
   return (
@@ -34,12 +35,18 @@ export default function Home() {
             </div>
             <div className="flex items-center gap-4">
               <ThemeToggle />
-              <button className="hidden sm:flex text-sm font-medium text-muted-foreground hover:text-primary px-4 py-2 transition-colors">
+              <Link
+                to="/login"
+                className="hidden sm:flex text-sm font-medium text-muted-foreground hover:text-primary px-4 py-2 transition-colors"
+              >
                 Log In
-              </button>
-              <button className="bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-medium px-6 py-2.5 rounded shadow-sm hover:shadow-md transition-all border border-primary">
+              </Link>
+              <Link
+                to="/register"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-medium px-6 py-2.5 rounded shadow-sm hover:shadow-md transition-all border border-primary"
+              >
                 Sign Up
-              </button>
+              </Link>
             </div>
           </div>
         </div>
