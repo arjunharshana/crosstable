@@ -1,11 +1,16 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Logo } from "../components/Logo";
 import { ThemeToggle } from "../components/ThemeToggle";
+import api from "../services/api";
+import { useAuth } from "../hooks/useAuth";
+import { AxiosError } from "axios";
 
 export default function Register() {
-  const [showPassword, setShowPassword] = useState(false);
+  const navigate = useNavigate();
+  const { login } = useAuth(); // Hook into our global auth state
 
+  const [showPassword, setShowPassword] = useState(false);
   const [step, setStep] = useState<1 | 2>(1);
   const [formData, setFormData] = useState({
     fname: "",
@@ -25,24 +30,40 @@ export default function Register() {
 
   const isPasswordValid = Object.values(passwordReqs).every(Boolean);
 
-  // form processing handlers
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.id]: e.target.value });
   };
 
-  const handleSendOTP = (e: React.FormEvent) => {
+  const handleSendOTP = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isPasswordValid) return;
-    //api call for sending otp
 
-    setStep(2);
+    try {
+      await api.post("/auth/send-otp", { email: formData.email });
+      setStep(2);
+    } catch (err) {
+      const axiosError = err as AxiosError<{ message: string }>;
+      alert(
+        axiosError.response?.data?.message ||
+          "Error sending code. Please try again.",
+      );
+    }
   };
 
-  const handleVerifyOTP = (e: React.FormEvent) => {
+  const handleVerifyOTP = async (e: React.FormEvent) => {
     e.preventDefault();
-    //api call for verifying otp and completing registration
+    try {
+      const response = await api.post("/auth/register/verify", {
+        ...formData,
+        otp,
+      });
 
-    console.log("Submitting registration:", { ...formData, otp });
+      login(response.data.token, response.data.user);
+      navigate("/dashboard");
+    } catch (err) {
+      const axiosError = err as AxiosError<{ message: string }>;
+      alert(axiosError.response?.data?.message || "Verification failed.");
+    }
   };
 
   return (
@@ -53,7 +74,7 @@ export default function Register() {
           <div className="flex justify-between items-center h-24">
             <div className="flex items-center gap-3">
               <Link to="/">
-                <Logo className="h-12" />
+                <Logo className="h-16" />
               </Link>
             </div>
             <div className="flex items-center gap-4">
@@ -97,7 +118,6 @@ export default function Register() {
           <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] mix-blend-multiply dark:mix-blend-screen"></div>
 
           <div className="relative z-10 max-w-md mx-auto w-full my-auto py-12 md:py-16">
-            {/* registration form */}
             {step === 1 ? (
               <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <div className="mb-10">
@@ -105,8 +125,7 @@ export default function Register() {
                     Create Account
                   </h1>
                   <p className="text-muted-foreground font-light text-sm">
-                    Join the network of professional tournament organizers and
-                    players.
+                    Join the network of professional tournament organizers.
                   </p>
                 </div>
 
@@ -122,7 +141,7 @@ export default function Register() {
                       <input
                         className="w-full bg-card border border-border text-foreground px-4 py-3 rounded-md focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent placeholder-muted-foreground transition-colors shadow-sm"
                         id="fname"
-                        placeholder="First Name"
+                        placeholder="Magnus"
                         type="text"
                         required
                         value={formData.fname}
@@ -139,7 +158,7 @@ export default function Register() {
                       <input
                         className="w-full bg-card border border-border text-foreground px-4 py-3 rounded-md focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent placeholder-muted-foreground transition-colors shadow-sm"
                         id="lname"
-                        placeholder="Last Name"
+                        placeholder="Carlsen"
                         type="text"
                         required
                         value={formData.lname}
@@ -186,7 +205,7 @@ export default function Register() {
                         onBlur={() => setIsPasswordFocused(false)}
                       />
                       <button
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
                       >
@@ -196,91 +215,54 @@ export default function Register() {
                       </button>
                     </div>
 
-                    {/* DYNAMIC: Only expands when focused OR when there's input but it's not fully valid yet */}
                     <div
-                      className={`grid grid-cols-2 gap-2 text-[10px] sm:text-xs overflow-hidden transition-all duration-300 ease-in-out ${
-                        isPasswordFocused ||
-                        (formData.password.length > 0 && !isPasswordValid)
-                          ? "max-h-24 pt-2 opacity-100"
-                          : "max-h-0 pt-0 opacity-0"
-                      }`}
+                      className={`grid grid-cols-2 gap-2 text-[10px] sm:text-xs overflow-hidden transition-all duration-300 ease-in-out ${isPasswordFocused || (formData.password.length > 0 && !isPasswordValid) ? "max-h-24 pt-2 opacity-100" : "max-h-0 pt-0 opacity-0"}`}
                     >
-                      <div
-                        className={`flex items-center gap-1.5 transition-colors duration-300 ${passwordReqs.length ? "text-accent" : "text-muted-foreground"}`}
-                      >
-                        <span className="material-symbols-outlined text-[14px]">
-                          {passwordReqs.length
-                            ? "check_circle"
-                            : "radio_button_unchecked"}
-                        </span>
-                        <span>8+ Characters</span>
-                      </div>
-                      <div
-                        className={`flex items-center gap-1.5 transition-colors duration-300 ${passwordReqs.uppercase ? "text-accent" : "text-muted-foreground"}`}
-                      >
-                        <span className="material-symbols-outlined text-[14px]">
-                          {passwordReqs.uppercase
-                            ? "check_circle"
-                            : "radio_button_unchecked"}
-                        </span>
-                        <span>Uppercase Letter</span>
-                      </div>
-                      <div
-                        className={`flex items-center gap-1.5 transition-colors duration-300 ${passwordReqs.number ? "text-accent" : "text-muted-foreground"}`}
-                      >
-                        <span className="material-symbols-outlined text-[14px]">
-                          {passwordReqs.number
-                            ? "check_circle"
-                            : "radio_button_unchecked"}
-                        </span>
-                        <span>At least 1 Number</span>
-                      </div>
-                      <div
-                        className={`flex items-center gap-1.5 transition-colors duration-300 ${passwordReqs.special ? "text-accent" : "text-muted-foreground"}`}
-                      >
-                        <span className="material-symbols-outlined text-[14px]">
-                          {passwordReqs.special
-                            ? "check_circle"
-                            : "radio_button_unchecked"}
-                        </span>
-                        <span>Special Character</span>
-                      </div>
+                      {Object.entries(passwordReqs).map(([key, valid]) => (
+                        <div
+                          key={key}
+                          className={`flex items-center gap-1.5 transition-colors duration-300 ${valid ? "text-accent" : "text-muted-foreground"}`}
+                        >
+                          <span className="material-symbols-outlined text-[14px]">
+                            {valid ? "check_circle" : "radio_button_unchecked"}
+                          </span>
+                          <span className="capitalize">
+                            {key === "special"
+                              ? "Special Char"
+                              : key === "length"
+                                ? "8+ Chars"
+                                : key}
+                          </span>
+                        </div>
+                      ))}
                     </div>
                   </div>
 
                   <div className="flex items-start gap-3 pt-2">
-                    <div className="flex items-center h-5">
-                      <input
-                        className="w-4 h-4 rounded-sm border-border bg-card text-accent focus:ring-offset-background focus:ring-accent"
-                        id="terms"
-                        type="checkbox"
-                        required
-                      />
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      <label
-                        className="font-light cursor-pointer"
-                        htmlFor="terms"
+                    <input
+                      className="w-4 h-4 rounded-sm border-border bg-card text-accent"
+                      id="terms"
+                      type="checkbox"
+                      required
+                    />
+                    <label
+                      className="text-xs text-muted-foreground font-light"
+                      htmlFor="terms"
+                    >
+                      I agree to the{" "}
+                      <a
+                        className="text-foreground font-medium hover:underline"
+                        href="#"
                       >
-                        I agree to the{" "}
-                        <a
-                          className="text-foreground font-medium hover:underline hover:text-accent transition-colors"
-                          href="#"
-                        >
-                          Privacy Policy
-                        </a>
-                        .
-                      </label>
-                    </div>
+                        Privacy Policy
+                      </a>
+                      .
+                    </label>
                   </div>
 
                   <div className="pt-4">
                     <button
-                      className={`w-full font-bold text-sm uppercase tracking-wider py-4 rounded-md shadow-md transition-all transform ${
-                        isPasswordValid
-                          ? "bg-accent hover:bg-accent/90 text-[#0B0F19] hover:-translate-y-0.5 hover:shadow-lg"
-                          : "bg-muted text-muted-foreground cursor-not-allowed"
-                      }`}
+                      className={`w-full font-bold text-sm uppercase tracking-wider py-4 rounded-md shadow-md transition-all transform ${isPasswordValid ? "bg-accent hover:bg-accent/90 text-[#0B0F19] hover:-translate-y-0.5" : "bg-muted text-muted-foreground cursor-not-allowed"}`}
                       type="submit"
                       disabled={!isPasswordValid}
                     >
@@ -290,7 +272,6 @@ export default function Register() {
                 </form>
               </div>
             ) : (
-              /* --- STEP 2: OTP VERIFICATION --- */
               <div className="animate-in fade-in slide-in-from-right-8 duration-500">
                 <div className="mb-10">
                   <button
@@ -308,7 +289,7 @@ export default function Register() {
                   <p className="text-muted-foreground font-light text-sm leading-relaxed">
                     We've sent a 6-digit verification code to <br />
                     <span className="font-medium text-foreground">
-                      {formData.email || "your email"}
+                      {formData.email}
                     </span>
                     .
                   </p>
@@ -323,7 +304,7 @@ export default function Register() {
                       Verification Code
                     </label>
                     <input
-                      className="w-full bg-card border border-border text-foreground px-4 py-4 rounded-md focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent placeholder-muted-foreground/30 transition-colors shadow-sm text-center text-3xl tracking-[0.5em] font-mono"
+                      className="w-full bg-card border border-border text-foreground px-4 py-4 rounded-md focus:outline-none focus:border-accent text-center text-3xl tracking-[0.5em] font-mono"
                       id="otp"
                       maxLength={6}
                       placeholder="000000"
@@ -332,29 +313,16 @@ export default function Register() {
                       value={otp}
                       onChange={(e) =>
                         setOtp(e.target.value.replace(/\D/g, ""))
-                      } // Strips out non-numbers automatically
+                      }
                     />
                   </div>
-
                   <div className="pt-2">
                     <button
-                      className="w-full bg-accent hover:bg-accent/90 text-[#0B0F19] font-bold text-sm uppercase tracking-wider py-4 rounded-md shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5"
+                      className="w-full bg-accent hover:bg-accent/90 text-[#0B0F19] font-bold text-sm uppercase tracking-wider py-4 rounded-md shadow-md"
                       type="submit"
                     >
                       Complete Registration
                     </button>
-                  </div>
-
-                  <div className="text-center pt-4">
-                    <p className="text-sm text-muted-foreground">
-                      Didn't receive a code?{" "}
-                      <button
-                        type="button"
-                        className="font-semibold text-foreground hover:text-accent transition-colors underline decoration-border underline-offset-4"
-                      >
-                        Resend
-                      </button>
-                    </p>
                   </div>
                 </form>
               </div>

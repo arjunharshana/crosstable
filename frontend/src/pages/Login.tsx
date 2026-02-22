@@ -1,9 +1,15 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Logo } from "../components/Logo";
 import { ThemeToggle } from "../components/ThemeToggle";
+import api from "../services/api";
+import { useAuth } from "../hooks/useAuth";
+import { AxiosError } from "axios";
 
 export default function Login() {
+  const navigate = useNavigate();
+  const { login } = useAuth();
+
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
@@ -14,10 +20,22 @@ export default function Login() {
     setFormData({ ...formData, [e.target.id]: e.target.value });
   };
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    // API call for authentication
-    console.log("Attempting login:", formData);
+    try {
+      const response = await api.post("/auth/login", formData);
+      const { token, user } = response.data;
+      login(token, user);
+      navigate("/dashboard");
+    } catch (err) {
+      const axiosError = err as AxiosError<{ message: string }>;
+      const errorMessage =
+        axiosError.response?.data?.message ||
+        "Invalid credentials. Please try again.";
+
+      console.error("Login Error:", errorMessage);
+      alert(errorMessage);
+    }
   };
 
   return (
