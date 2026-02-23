@@ -4,6 +4,9 @@ import Register from "./pages/Register";
 import Login from "./pages/Login";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
+import DashboardLayout from "./components/DashboardLayout";
+import Dashboard from "./pages/Dashboard";
+//import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
   return (
@@ -14,6 +17,19 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
+
+        <Route element={<DashboardLayout />}>
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route
+            path="/explore"
+            element={<div>Explore Tournaments (Coming Soon)</div>}
+          />
+          <Route
+            path="/tournaments"
+            element={<div>My Tournaments (Coming Soon)</div>}
+          />
+          {/* Other internal pages go here */}
+        </Route>
       </Routes>
     </Router>
   );
