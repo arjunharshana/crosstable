@@ -8,6 +8,8 @@ import DashboardLayout from "./components/DashboardLayout";
 import Dashboard from "./pages/Dashboard";
 import Settings from "./pages/Settings";
 import Explore from "./pages/Explore";
+import MyTournaments from "./pages/MyTournaments";
+import MyGames from "./pages/MyGames";
 //import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
@@ -23,10 +25,8 @@ function App() {
         <Route element={<DashboardLayout />}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/explore" element={<Explore />} />
-          <Route
-            path="/tournaments"
-            element={<div>My Tournaments (Coming Soon)</div>}
-          />
+          <Route path="/tournaments" element={<MyTournaments />} />
+          <Route path="/games" element={<MyGames />} />
           <Route path="/settings" element={<Settings />} />
           {/* Other internal pages go here */}
         </Route>

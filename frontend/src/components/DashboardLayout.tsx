@@ -6,6 +6,7 @@ import { useAuth } from "../hooks/useAuth";
 
 export default function DashboardLayout() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const location = useLocation();
   const { user, logout } = useAuth();
@@ -19,7 +20,7 @@ export default function DashboardLayout() {
     { path: "/settings", icon: "settings", label: "Settings" },
   ];
 
-  // we will close the dropdown if user clicks out of it
+  // Close profile dropdown if clicked outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
@@ -32,13 +33,25 @@ export default function DashboardLayout() {
 
   return (
     <div className="bg-background h-screen flex overflow-hidden selection:bg-accent selection:text-[#0B1120] font-sans text-foreground">
-      {/* Collapsible Sidebar */}
+      {/* Mobile Backdrop Overlay */}
+      {isMobileMenuOpen && (
+        <div
+          className="fixed inset-0 bg-background/80 backdrop-blur-sm z-40 md:hidden animate-in fade-in duration-200"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+
+      {/* Sidebar (Responsive: Slide-out on mobile, collapsible on desktop) */}
       <aside
-        className={`${isSidebarCollapsed ? "w-20" : "w-64"} bg-card border-r border-border flex flex-col justify-between transition-all duration-300 z-50 flex-shrink-0 hidden md:flex`}
+        className={`fixed inset-y-0 left-0 z-50 bg-card border-r border-border flex flex-col justify-between transition-all duration-300 ease-in-out
+          ${isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"} 
+          md:relative md:translate-x-0
+          ${isSidebarCollapsed ? "md:w-20" : "md:w-64 w-64"}
+        `}
       >
         <div>
           <div
-            className={`h-20 flex items-center border-b border-border/50 ${isSidebarCollapsed ? "justify-center px-0" : "justify-start px-6"}`}
+            className={`h-20 flex items-center border-b border-border/50 ${isSidebarCollapsed ? "justify-center px-0" : "justify-between md:justify-start px-6"}`}
           >
             <Link to="/dashboard" className="flex items-center gap-3">
               <Logo className="h-8 w-8 text-accent" />
@@ -48,15 +61,24 @@ export default function DashboardLayout() {
                 </span>
               )}
             </Link>
+
+            {/* Close button strictly for Mobile */}
+            <button
+              className="md:hidden text-muted-foreground hover:text-foreground"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              <span className="material-symbols-outlined">close</span>
+            </button>
           </div>
 
-          <nav className="mt-8 px-2 space-y-2">
+          <nav className="mt-8 px-2 space-y-2 overflow-y-auto">
             {navItems.map((item) => {
               const isActive = location.pathname === item.path;
               return (
                 <Link
                   key={item.path}
                   to={item.path}
+                  onClick={() => setIsMobileMenuOpen(false)} // <-- ADD THIS LINE
                   className={`flex items-center p-3 rounded-md group transition-all duration-200 ${
                     isActive
                       ? "bg-accent/10 text-accent border border-accent/20 shadow-[0_0_15px_rgba(197,160,89,0.15)]"
@@ -80,8 +102,9 @@ export default function DashboardLayout() {
           </nav>
         </div>
 
-        {/* profile*/}
+        {/* Profile Section with Dropdown */}
         <div className="p-4 border-t border-border/50 relative" ref={menuRef}>
+          {/* Pop-up Menu */}
           {isProfileMenuOpen && (
             <div
               className={`absolute bottom-full mb-2 bg-card border border-border rounded-md shadow-lg overflow-hidden z-50 animate-in fade-in slide-in-from-bottom-2 duration-200 ${isSidebarCollapsed ? "left-4 right-4" : "left-4 right-4"}`}
@@ -108,7 +131,7 @@ export default function DashboardLayout() {
             </div>
           )}
 
-          {/* profile trigger */}
+          {/* Profile Trigger Button */}
           <button
             onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
             className={`w-full flex items-center p-2 rounded-md hover:bg-background transition-colors ${isSidebarCollapsed ? "justify-center" : "justify-between"}`}
@@ -119,13 +142,6 @@ export default function DashboardLayout() {
                 className="h-8 w-8 rounded-full ring-2 ring-background"
                 src={`https://ui-avatars.com/api/?name=${user?.fname}+${user?.lname}&background=1E293B&color=C5A059`}
               />
-              {!isSidebarCollapsed && (
-                <div className="ml-3 overflow-hidden text-left">
-                  <p className="text-sm font-medium text-foreground truncate">
-                    {user?.fname} {user?.lname?.charAt(0)}.
-                  </p>
-                </div>
-              )}
             </div>
             {!isSidebarCollapsed && (
               <span
@@ -140,7 +156,7 @@ export default function DashboardLayout() {
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col relative overflow-hidden">
-        {/* grid bg*/}
+        {/* Subtle Grid Background */}
         <div
           className="absolute inset-0 opacity-[0.03] pointer-events-none z-0"
           style={{
@@ -157,6 +173,15 @@ export default function DashboardLayout() {
         {/* Top Header */}
         <header className="h-20 border-b border-border bg-background/80 backdrop-blur-sm z-10 flex items-center justify-between px-6 lg:px-8">
           <div className="flex items-center gap-4">
+            {/* Mobile Hamburger Button */}
+            <button
+              onClick={() => setIsMobileMenuOpen(true)}
+              className="text-muted-foreground hover:text-foreground transition-colors md:hidden"
+            >
+              <span className="material-symbols-outlined text-2xl">menu</span>
+            </button>
+
+            {/* Desktop Collapse Button */}
             <button
               onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
               className="text-muted-foreground hover:text-foreground transition-colors hidden md:block"
@@ -165,6 +190,7 @@ export default function DashboardLayout() {
                 {isSidebarCollapsed ? "menu_open" : "menu"}
               </span>
             </button>
+
             <Logo className="h-8 w-8 md:hidden text-accent" />
           </div>
 
@@ -177,7 +203,7 @@ export default function DashboardLayout() {
           </div>
         </header>
 
-        {/*  */}
+        {/* Injected Page Content */}
         <main className="flex-1 overflow-y-auto p-6 lg:p-8 z-10 scroll-smooth relative">
           <Outlet />
         </main>
