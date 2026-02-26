@@ -142,7 +142,7 @@ export default function DashboardLayout() {
       <div className="flex-1 flex flex-col relative overflow-hidden">
         {/* grid bg*/}
         <div
-          className="absolute inset-0 opacity-[0.05] pointer-events-none z-0"
+          className="absolute inset-0 opacity-[0.03] pointer-events-none z-0"
           style={{
             backgroundImage:
               "linear-gradient(to right, currentColor 1px, transparent 1px), linear-gradient(to bottom, currentColor 1px, transparent 1px)",
@@ -177,7 +177,7 @@ export default function DashboardLayout() {
           </div>
         </header>
 
-        {/* Injected Page Content */}
+        {/*  */}
         <main className="flex-1 overflow-y-auto p-6 lg:p-8 z-10 scroll-smooth relative">
           <Outlet />
         </main>
