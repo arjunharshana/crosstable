@@ -10,6 +10,7 @@ import Settings from "./pages/Settings";
 import Explore from "./pages/Explore";
 import MyTournaments from "./pages/MyTournaments";
 import MyGames from "./pages/MyGames";
+import Profile from "./pages/Profile";
 //import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
@@ -28,6 +29,7 @@ function App() {
           <Route path="/tournaments" element={<MyTournaments />} />
           <Route path="/games" element={<MyGames />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/profile" element={<Profile />} />
           {/* Other internal pages go here */}
         </Route>
       </Routes>
