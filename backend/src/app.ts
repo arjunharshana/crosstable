@@ -3,6 +3,7 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import authRoutes from "./routes/authRoutes";
 import helmet from "helmet";
+import userRoutes from "./routes/userRoutes";
 
 const app: Application = express();
 
@@ -22,7 +23,7 @@ app.use(
 
 // Routes
 app.use("/api/auth", authRoutes);
-
+app.use("/api/users", userRoutes);
 app.get("/", (req: Request, res: Response) => {
   res.send("CrossTable API is running...");
 });
