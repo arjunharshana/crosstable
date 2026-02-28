@@ -8,13 +8,14 @@ import { AxiosError } from "axios";
 
 export default function Register() {
   const navigate = useNavigate();
-  const { login } = useAuth(); // Hook into our global auth state
+  const { login } = useAuth();
 
   const [showPassword, setShowPassword] = useState(false);
   const [step, setStep] = useState<1 | 2>(1);
   const [formData, setFormData] = useState({
-    fname: "",
-    lname: "",
+    firstName: "",
+    lastName: "",
+    username: "",
     email: "",
     password: "",
   });
@@ -83,7 +84,7 @@ export default function Register() {
               </span>
               <Link
                 to="/login"
-                className="text-sm font-bold text-primary hover:text-accent transition-colors mr-2"
+                className="text-sm font-bold text-accent hover:text-accent/80 transition-colors mr-2"
               >
                 Log in
               </Link>
@@ -114,7 +115,7 @@ export default function Register() {
         </div>
 
         {/* Right Panel: Dynamic Form */}
-        <div className="w-full md:w-1/2 h-full flex flex-col px-8 sm:px-12 lg:px-24 bg-background relative overflow-y-auto">
+        <div className="w-full md:w-1/2 h-full flex flex-col px-8 sm:px-12 lg:px-24 bg-background relative overflow-y-auto hide-scrollbar">
           <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] mix-blend-multiply dark:mix-blend-screen"></div>
 
           <div className="relative z-10 max-w-md mx-auto w-full my-auto py-12 md:py-16">
@@ -129,47 +130,68 @@ export default function Register() {
                   </p>
                 </div>
 
-                <form className="space-y-5" onSubmit={handleSendOTP}>
+                <form className="space-y-4" onSubmit={handleSendOTP}>
+                  {/* First & Last Name Grid */}
                   <div className="grid grid-cols-2 gap-5">
                     <div className="space-y-1.5">
                       <label
-                        className="text-xs font-semibold text-foreground uppercase tracking-wide"
-                        htmlFor="fname"
+                        className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider"
+                        htmlFor="firstName"
                       >
                         First Name
                       </label>
                       <input
                         className="w-full bg-card border border-border text-foreground px-4 py-3 rounded-md focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent placeholder-muted-foreground transition-colors shadow-sm"
-                        id="fname"
+                        id="firstName"
                         placeholder="Magnus"
                         type="text"
                         required
-                        value={formData.fname}
+                        value={formData.firstName}
                         onChange={handleInputChange}
                       />
                     </div>
                     <div className="space-y-1.5">
                       <label
-                        className="text-xs font-semibold text-foreground uppercase tracking-wide"
-                        htmlFor="lname"
+                        className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider"
+                        htmlFor="lastName"
                       >
                         Last Name
                       </label>
                       <input
                         className="w-full bg-card border border-border text-foreground px-4 py-3 rounded-md focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent placeholder-muted-foreground transition-colors shadow-sm"
-                        id="lname"
+                        id="lastName"
                         placeholder="Carlsen"
                         type="text"
                         required
-                        value={formData.lname}
+                        value={formData.lastName}
                         onChange={handleInputChange}
                       />
                     </div>
                   </div>
 
+                  {/* Username */}
                   <div className="space-y-1.5">
                     <label
-                      className="text-xs font-semibold text-foreground uppercase tracking-wide"
+                      className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider"
+                      htmlFor="username"
+                    >
+                      Username (Player Handle)
+                    </label>
+                    <input
+                      className="w-full bg-card border border-border text-foreground px-4 py-3 rounded-md focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent placeholder-muted-foreground transition-colors shadow-sm"
+                      id="username"
+                      placeholder="magnuscarlsen"
+                      type="text"
+                      required
+                      value={formData.username}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+
+                  {/* Email */}
+                  <div className="space-y-1.5">
+                    <label
+                      className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider"
                       htmlFor="email"
                     >
                       Email
@@ -185,9 +207,10 @@ export default function Register() {
                     />
                   </div>
 
+                  {/* Password */}
                   <div className="space-y-1.5">
                     <label
-                      className="text-xs font-semibold text-foreground uppercase tracking-wide"
+                      className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider"
                       htmlFor="password"
                     >
                       Password
@@ -209,12 +232,13 @@ export default function Register() {
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
                       >
-                        <span className="material-symbols-outlined text-sm">
+                        <span className="material-symbols-outlined text-[18px]">
                           {showPassword ? "visibility_off" : "visibility"}
                         </span>
                       </button>
                     </div>
 
+                    {/* Password Requirements */}
                     <div
                       className={`grid grid-cols-2 gap-2 text-[10px] sm:text-xs overflow-hidden transition-all duration-300 ease-in-out ${isPasswordFocused || (formData.password.length > 0 && !isPasswordValid) ? "max-h-24 pt-2 opacity-100" : "max-h-0 pt-0 opacity-0"}`}
                     >
@@ -238,18 +262,26 @@ export default function Register() {
                     </div>
                   </div>
 
-                  <div className="flex items-start gap-3 pt-2">
+                  {/* Terms */}
+                  <div className="flex items-start gap-3 pt-3 pb-2">
                     <input
-                      className="w-4 h-4 rounded-sm border-border bg-card text-accent"
+                      className="w-4 h-4 rounded-sm border-border bg-card text-accent mt-0.5 cursor-pointer focus:ring-accent"
                       id="terms"
                       type="checkbox"
                       required
                     />
                     <label
-                      className="text-xs text-muted-foreground font-light"
+                      className="text-xs text-muted-foreground font-light leading-relaxed cursor-pointer"
                       htmlFor="terms"
                     >
                       I agree to the{" "}
+                      <a
+                        className="text-foreground font-medium hover:underline"
+                        href="#"
+                      >
+                        Terms of Service
+                      </a>{" "}
+                      and{" "}
                       <a
                         className="text-foreground font-medium hover:underline"
                         href="#"
@@ -260,9 +292,10 @@ export default function Register() {
                     </label>
                   </div>
 
-                  <div className="pt-4">
+                  {/* Submit */}
+                  <div className="pt-2">
                     <button
-                      className={`w-full font-bold text-sm uppercase tracking-wider py-4 rounded-md shadow-md transition-all transform ${isPasswordValid ? "bg-accent hover:bg-accent/90 text-[#0B0F19] hover:-translate-y-0.5" : "bg-muted text-muted-foreground cursor-not-allowed"}`}
+                      className={`w-full font-bold text-sm uppercase tracking-wider py-3.5 rounded-md shadow-sm transition-all transform ${isPasswordValid ? "bg-accent hover:bg-accent/90 text-[#0B0F19] hover:-translate-y-0.5" : "bg-muted text-muted-foreground cursor-not-allowed"}`}
                       type="submit"
                       disabled={!isPasswordValid}
                     >
@@ -278,10 +311,10 @@ export default function Register() {
                     onClick={() => setStep(1)}
                     className="text-muted-foreground hover:text-foreground mb-6 flex items-center text-sm transition-colors"
                   >
-                    <span className="material-symbols-outlined text-sm mr-1">
+                    <span className="material-symbols-outlined text-[18px] mr-1">
                       arrow_back
                     </span>
-                    Back
+                    Back to Form
                   </button>
                   <h1 className="text-3xl md:text-4xl font-semibold text-foreground mb-3 font-serif">
                     Check your email
@@ -291,20 +324,19 @@ export default function Register() {
                     <span className="font-medium text-foreground">
                       {formData.email}
                     </span>
-                    .
                   </p>
                 </div>
 
                 <form className="space-y-6" onSubmit={handleVerifyOTP}>
                   <div className="space-y-2">
                     <label
-                      className="text-xs font-semibold text-foreground uppercase tracking-wide"
+                      className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider"
                       htmlFor="otp"
                     >
                       Verification Code
                     </label>
                     <input
-                      className="w-full bg-card border border-border text-foreground px-4 py-4 rounded-md focus:outline-none focus:border-accent text-center text-3xl tracking-[0.5em] font-mono"
+                      className="w-full bg-card border border-border text-foreground px-4 py-4 rounded-md focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent text-center text-3xl tracking-[0.5em] font-mono shadow-inner"
                       id="otp"
                       maxLength={6}
                       placeholder="000000"
@@ -318,7 +350,7 @@ export default function Register() {
                   </div>
                   <div className="pt-2">
                     <button
-                      className="w-full bg-accent hover:bg-accent/90 text-[#0B0F19] font-bold text-sm uppercase tracking-wider py-4 rounded-md shadow-md"
+                      className="w-full bg-accent hover:bg-accent/90 text-[#0B0F19] font-bold text-sm uppercase tracking-wider py-4 rounded-md shadow-sm transition-transform hover:-translate-y-0.5"
                       type="submit"
                     >
                       Complete Registration

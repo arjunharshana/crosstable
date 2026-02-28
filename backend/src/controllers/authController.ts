@@ -11,7 +11,7 @@ import crypto from "crypto";
 import dotenv from "dotenv";
 
 const RegisterUser = async (req: Request, res: Response) => {
-  const { username, email, password } = req.body;
+  const { username, firstName, lastName, email, password } = req.body;
 
   try {
     const existingUser = await User.findOne({ $or: [{ email }, { username }] });
@@ -26,6 +26,8 @@ const RegisterUser = async (req: Request, res: Response) => {
 
     const user = new User({
       username,
+      firstName,
+      lastName,
       email,
       password: hashedPassword,
     });
