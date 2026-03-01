@@ -40,7 +40,7 @@ export default function Register() {
     if (!isPasswordValid) return;
 
     try {
-      await api.post("/auth/send-otp", { email: formData.email });
+      await api.post("/auth/register", formData);
       setStep(2);
     } catch (err) {
       const axiosError = err as AxiosError<{ message: string }>;
@@ -54,12 +54,11 @@ export default function Register() {
   const handleVerifyOTP = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await api.post("/auth/register/verify", {
-        ...formData,
+      const response = await api.post("/auth/verify-otp", {
+        email: formData.email,
         otp,
       });
-
-      login(response.data.token, response.data.user);
+      login(response.data);
       navigate("/dashboard");
     } catch (err) {
       const axiosError = err as AxiosError<{ message: string }>;

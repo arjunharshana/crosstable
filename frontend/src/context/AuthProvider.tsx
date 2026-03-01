@@ -1,47 +1,42 @@
-import { useState, useEffect } from "react";
-import type { ReactNode } from "react";
+import { useState, useEffect, type ReactNode } from "react";
 import { AuthContext, type User } from "./AuthContext";
 import api from "../services/api";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(
-    localStorage.getItem("token"),
-  );
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const verifyUser = async () => {
-      if (token) {
-        try {
-          const res = await api.get("/auth/me");
-          setUser(res.data);
-        } catch (err) {
-          console.error("Token verification failed:", err);
-        }
+    const verifySession = async () => {
+      try {
+        const res = await api.get("/users/me");
+        setUser(res.data);
+      } catch {
+        setUser(null);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
-    verifyUser();
-  }, [token]);
+    verifySession();
+  }, []);
 
-  const handleLogin = (newToken: string, userData: User) => {
-    localStorage.setItem("token", newToken);
-    setToken(newToken);
+  const handleLogin = (userData: User) => {
     setUser(userData);
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    setToken(null);
-    setUser(null);
+  const handleLogout = async () => {
+    try {
+      await api.post("/auth/logout");
+      setUser(null);
+    } catch (err: unknown) {
+      console.error("Logout failed", err);
+    }
   };
 
   return (
     <AuthContext.Provider
       value={{
         user,
-        token,
         login: handleLogin,
         logout: handleLogout,
         loading,

@@ -1,60 +1,30 @@
-const playerStats = {
-  name: "Magnus C.",
-  country: "NOR",
-  worldRank: "#1",
-  tags: [
-    {
-      label: "FIDE Verified",
-      icon: "verified",
-      colorClass: "text-blue-500 bg-blue-500/10 border-blue-500/20",
-    },
-    {
-      label: "GM Title",
-      icon: "military_tech",
-      colorClass: "text-accent bg-accent/10 border-accent/20",
-    },
-  ],
-  performance: {
-    totalGames: 42,
-    winRate: "76%",
-    wins: 23,
-    draws: 15,
-    losses: 4,
-    avgOpponent: 2745,
-    perfRating: 2890,
-    blackWins: "45%",
-    whiteWins: "62%",
-  },
-};
+import { useState, useEffect } from "react";
+import api from "../services/api";
+interface UserProfile {
+  firstName: string;
+  lastName: string;
+  country: string;
+  avatar?: string;
+  isVerified?: boolean;
+  isFideVerified?: boolean;
+  title?: string;
+  createdAt: string;
+  ratings: {
+    classical: number;
+    rapid: number;
+    blitz: number;
+  };
+  stats: {
+    tournamentsPlayed: number;
+    tournamentsWon: number;
+    gamesPlayed: number;
+    gamesWon: number;
+    gamesDrawn: number;
+    gamesLost: number;
+  };
+}
 
-const ratings = [
-  {
-    id: "classical",
-    label: "Classical",
-    rating: "2830",
-    change: "+4.2",
-    isPositive: true,
-    path: "M0,35 Q10,32 20,28 T40,25 T60,15 T80,10 T100,5",
-  },
-  {
-    id: "rapid",
-    label: "Rapid",
-    rating: "2823",
-    change: "-2.0",
-    isPositive: false,
-    path: "M0,20 Q10,18 20,22 T40,25 T60,30 T80,28 T100,35",
-  },
-  {
-    id: "blitz",
-    label: "Blitz",
-    rating: "2886",
-    change: "+12.0",
-    isPositive: true,
-    path: "M0,30 Q10,32 20,20 T40,15 T60,25 T80,10 T100,2",
-  },
-];
-
-const trophies = [
+const placeholderTrophies = [
   {
     id: 1,
     title: "Champions Chess Tour Finals",
@@ -68,47 +38,66 @@ const trophies = [
       "text-accent border-accent shadow-[0_0_15px_rgba(197,160,89,0.15)]",
     badgeTheme: "text-accent border-accent/20 bg-accent/5",
   },
-  {
-    id: 2,
-    title: "World Rapid Championship",
-    location: "Samarkand, Uzbekistan",
-    placement: "1st Place",
-    desc: "Defended the title successfully in a thrilling tie-break finish.",
-    date: "Dec 2023",
-    prize: "$60,000",
-    icon: "workspace_premium",
-    colorTheme:
-      "text-muted-foreground border-border group-hover:border-muted-foreground",
-    badgeTheme:
-      "text-muted-foreground border-muted-foreground/20 bg-muted-foreground/10",
-  },
-  {
-    id: 3,
-    title: "Qatar Masters",
-    location: "Doha, Qatar",
-    placement: "3rd Place",
-    desc: "Strong finish in a highly competitive open field.",
-    date: "Oct 2023",
-    prize: "$25,000",
-    icon: "military_tech",
-    colorTheme: "text-amber-600 border-border group-hover:border-amber-600",
-    badgeTheme: "text-amber-600 border-amber-600/20 bg-amber-600/10",
-  },
-  {
-    id: 4,
-    title: "FIDE World Cup",
-    location: "Baku, Azerbaijan",
-    placement: "1st Place",
-    desc: "First ever World Cup victory, completing the set of all major classical titles.",
-    date: "Aug 2023",
-    prize: "$110,000",
-    icon: "trophy",
-    colorTheme: "text-accent border-border group-hover:border-accent",
-    badgeTheme: "text-accent border-accent/20 bg-accent/5",
-  },
 ];
 
+// Placeholder SVG paths for the rating charts
+const ratingChartPaths = {
+  classical: "M0,35 Q10,32 20,28 T40,25 T60,15 T80,10 T100,5",
+  rapid: "M0,20 Q10,18 20,22 T40,25 T60,30 T80,28 T100,35",
+  blitz: "M0,30 Q10,32 20,20 T40,15 T60,25 T80,10 T100,2",
+};
+
 export default function Profile() {
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const response = await api.get("/users/me");
+        setProfile(response.data);
+      } catch (error) {
+        console.error("Failed to fetch profile:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-full pt-32">
+        <div className="w-12 h-12 border-4 border-accent border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  if (!profile) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full pt-32 text-muted-foreground">
+        <span className="material-symbols-outlined text-4xl mb-4">error</span>
+        <p>Failed to load profile. Please try logging in again.</p>
+      </div>
+    );
+  }
+
+  // Calculate dynamic stats from backend data
+  const totalGames = profile.stats.gamesPlayed || 0;
+  const winRate =
+    totalGames > 0
+      ? Math.round((profile.stats.gamesWon / totalGames) * 100)
+      : 0;
+
+  // Bar Chart Widths
+  const winWidth =
+    totalGames > 0 ? `${(profile.stats.gamesWon / totalGames) * 100}%` : "0%";
+  const drawWidth =
+    totalGames > 0 ? `${(profile.stats.gamesDrawn / totalGames) * 100}%` : "0%";
+  const lossWidth =
+    totalGames > 0 ? `${(profile.stats.gamesLost / totalGames) * 100}%` : "0%";
+
   return (
     <div className="animate-in fade-in duration-500 pb-12 -mt-6 lg:-mt-8 -mx-6 lg:-mx-8">
       {/* Hero Banner Area */}
@@ -124,54 +113,79 @@ export default function Profile() {
           <div className="relative shrink-0">
             <div className="h-24 w-24 md:h-28 md:w-28 rounded-full p-1 bg-gradient-to-tr from-accent to-card shadow-lg z-20">
               <img
-                alt={playerStats.name}
+                alt={`${profile.firstName} ${profile.lastName}`}
                 className="h-full w-full rounded-full object-cover border-4 border-background bg-background"
-                src={`https://ui-avatars.com/api/?name=Magnus+C&background=1E293B&color=C5A059`}
+                src={
+                  profile.avatar ||
+                  `https://ui-avatars.com/api/?name=${profile.firstName}+${profile.lastName}&background=1E293B&color=C5A059`
+                }
               />
             </div>
-            <div className="absolute -bottom-1 -right-1 bg-background p-0.5 rounded-full border border-border shadow-sm z-30">
-              <span
-                className="material-symbols-outlined text-accent text-2xl"
-                title="Verified Grandmaster"
-              >
-                verified
-              </span>
-            </div>
+            {profile.isVerified && (
+              <div className="absolute -bottom-1 -right-1 bg-background p-0.5 rounded-full border border-border shadow-sm z-30">
+                <span
+                  className="material-symbols-outlined text-accent text-2xl"
+                  title="Verified Account"
+                >
+                  verified
+                </span>
+              </div>
+            )}
           </div>
 
           <div className="flex-1 mb-1 relative z-20">
             <h1 className="text-3xl md:text-4xl font-serif font-bold text-foreground flex items-center gap-3">
-              {playerStats.name}
+              {profile.firstName} {profile.lastName}
               <span className="text-sm font-sans font-normal text-muted-foreground px-2 py-0.5 rounded-md border border-border/50 bg-background/30 shadow-inner">
-                {playerStats.country}
+                {profile.country}
               </span>
             </h1>
 
             <div className="flex flex-wrap items-center gap-2 mt-3">
-              {playerStats.tags.map((tag, idx) => (
-                <span
-                  key={idx}
-                  className={`${tag.colorClass} border px-2.5 py-1 rounded-full text-[11px] font-mono font-bold uppercase tracking-wider flex items-center gap-1 shadow-sm backdrop-blur-sm`}
-                >
+              {/* Dynamic Tags based on Backend Schema (Role tag removed) */}
+              {profile.isFideVerified && (
+                <span className="text-blue-500 bg-blue-500/10 border border-blue-500/20 px-2.5 py-1 rounded-full text-[11px] font-mono font-bold uppercase tracking-wider flex items-center gap-1 shadow-sm backdrop-blur-sm">
                   <span className="material-symbols-outlined text-[14px]">
-                    {tag.icon}
-                  </span>
-                  {tag.label}
+                    verified
+                  </span>{" "}
+                  FIDE Verified
                 </span>
-              ))}
+              )}
+              {profile.title && profile.title !== "None" && (
+                <span className="text-accent bg-accent/10 border border-accent/20 px-2.5 py-1 rounded-full text-[11px] font-mono font-bold uppercase tracking-wider flex items-center gap-1 shadow-sm backdrop-blur-sm">
+                  <span className="material-symbols-outlined text-[14px]">
+                    military_tech
+                  </span>{" "}
+                  {profile.title} Title
+                </span>
+              )}
             </div>
+          </div>
+
+          <div className="text-right hidden md:block mb-1 relative z-20">
+            <p className="text-xs text-muted-foreground uppercase tracking-widest mb-1">
+              Total Tournaments
+            </p>
+            <p className="text-5xl font-mono font-bold text-foreground drop-shadow-md">
+              {profile.stats.tournamentsPlayed}
+            </p>
           </div>
         </div>
       </header>
 
       <div className="px-6 lg:px-8 pt-8">
-        {/* Ratings Board */}
+        {/* Dynamic Ratings Board */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-          {ratings.map((stat) => {
-            // Determine color class based purely on data logic
-            const svgThemeColor = stat.isPositive
-              ? "text-accent"
-              : "text-[#EF4444]";
+          {[
+            {
+              id: "classical",
+              label: "Classical",
+              rating: profile.ratings.classical,
+            },
+            { id: "rapid", label: "Rapid", rating: profile.ratings.rapid },
+            { id: "blitz", label: "Blitz", rating: profile.ratings.blitz },
+          ].map((stat) => {
+            const svgThemeColor = "text-accent";
 
             return (
               <div
@@ -187,14 +201,11 @@ export default function Profile() {
                       {stat.rating}
                     </p>
                   </div>
-                  <span
-                    className={`text-xs font-mono font-bold px-2 py-1 rounded-md border ${stat.isPositive ? "bg-[#10B981]/10 text-[#10B981] border-[#10B981]/20" : "bg-[#EF4444]/10 text-[#EF4444] border-[#EF4444]/20"}`}
-                  >
-                    {stat.change}
+                  <span className="text-xs font-mono font-bold px-2 py-1 rounded-md border bg-muted/10 text-muted-foreground border-muted/20">
+                    --
                   </span>
                 </div>
 
-                {/* SVG dynamically inherits the text color via `currentColor` */}
                 <div className={`h-16 w-full relative ${svgThemeColor}`}>
                   <svg
                     className="w-full h-full overflow-visible"
@@ -227,17 +238,28 @@ export default function Profile() {
                       strokeWidth="2"
                       strokeLinecap="round"
                       strokeLinejoin="round"
-                      d={stat.path}
+                      d={
+                        ratingChartPaths[
+                          stat.id as keyof typeof ratingChartPaths
+                        ]
+                      }
                     ></path>
                     <path
                       fill={`url(#gradient-${stat.id})`}
                       stroke="none"
-                      d={`${stat.path} V40 H0 Z`}
+                      d={`${ratingChartPaths[stat.id as keyof typeof ratingChartPaths]} V40 H0 Z`}
                     ></path>
                     <circle
                       className="animate-pulse"
                       cx="100"
-                      cy={stat.path.split(",").pop()?.split(" ")[0]}
+                      cy={
+                        ratingChartPaths[
+                          stat.id as keyof typeof ratingChartPaths
+                        ]
+                          .split(",")
+                          .pop()
+                          ?.split(" ")[0]
+                      }
                       fill="currentColor"
                       r="3"
                     ></circle>
@@ -258,24 +280,13 @@ export default function Profile() {
                 </span>
                 Trophy Room
               </h2>
-              <div className="flex gap-2">
-                <button className="p-1.5 text-muted-foreground hover:bg-card rounded-md hover:text-foreground transition-colors">
-                  <span className="material-symbols-outlined text-[20px]">
-                    filter_list
-                  </span>
-                </button>
-                <button className="p-1.5 text-muted-foreground hover:bg-card rounded-md hover:text-foreground transition-colors">
-                  <span className="material-symbols-outlined text-[20px]">
-                    calendar_month
-                  </span>
-                </button>
-              </div>
             </div>
 
+            {/* Placeholder Trophies */}
             <div className="relative pl-4 mt-2">
               <div className="absolute left-[27px] top-4 bottom-0 w-px bg-border"></div>
 
-              {trophies.map((trophy) => (
+              {placeholderTrophies.map((trophy) => (
                 <div key={trophy.id} className="relative flex gap-6 mb-8 group">
                   <div
                     className={`relative z-10 shrink-0 h-12 w-12 rounded-full bg-card border flex items-center justify-center transition-colors ${trophy.colorTheme}`}
@@ -305,23 +316,6 @@ export default function Profile() {
                     <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
                       {trophy.desc}
                     </p>
-
-                    <div className="flex flex-wrap items-center gap-4 text-xs font-mono text-muted-foreground bg-background/50 p-2 rounded-sm inline-flex border border-border/50">
-                      <span className="flex items-center gap-1.5 text-foreground/80">
-                        <span className="material-symbols-outlined text-[16px] text-accent">
-                          calendar_today
-                        </span>
-                        {trophy.date}
-                      </span>
-                      {trophy.prize && (
-                        <span className="flex items-center gap-1.5 text-foreground/80">
-                          <span className="material-symbols-outlined text-[16px] text-[#10B981]">
-                            payments
-                          </span>
-                          {trophy.prize}
-                        </span>
-                      )}
-                    </div>
                   </div>
                 </div>
               ))}
@@ -329,18 +323,19 @@ export default function Profile() {
           </div>
 
           <div className="lg:col-span-4 flex flex-col gap-8">
+            {/* Dynamic Performance Record */}
             <div className="flex flex-col gap-4">
               <h2 className="text-lg font-serif font-bold text-foreground flex items-center gap-2">
                 <span className="material-symbols-outlined text-accent text-[20px]">
                   query_stats
                 </span>
-                Performance (2024)
+                Performance Overview
               </h2>
               <div className="bg-card border border-border p-6 rounded-md shadow-sm">
                 <div className="flex justify-between items-end mb-4">
                   <div>
                     <span className="text-4xl font-mono font-bold text-foreground">
-                      {playerStats.performance.totalGames}
+                      {totalGames}
                     </span>
                     <span className="text-[10px] text-muted-foreground uppercase tracking-wider ml-2 font-bold">
                       Total Games
@@ -348,7 +343,7 @@ export default function Profile() {
                   </div>
                   <div className="text-right">
                     <span className="text-accent font-mono font-bold text-xl">
-                      {playerStats.performance.winRate}
+                      {winRate}%
                     </span>
                     <span className="text-[10px] text-muted-foreground block uppercase font-bold tracking-wider mt-0.5">
                       Win Rate
@@ -358,68 +353,52 @@ export default function Profile() {
 
                 <div className="flex h-3 rounded-sm overflow-hidden mb-4 w-full shadow-inner">
                   <div
-                    className="bg-[#10B981] hover:brightness-125 transition-all"
-                    style={{ width: "55%" }}
-                    title={`Won: ${playerStats.performance.wins}`}
+                    className="bg-emerald-500 hover:brightness-125 transition-all"
+                    style={{ width: winWidth }}
+                    title={`Won: ${profile.stats.gamesWon}`}
                   ></div>
                   <div
                     className="bg-muted-foreground/50 hover:brightness-125 transition-all"
-                    style={{ width: "35%" }}
-                    title={`Drawn: ${playerStats.performance.draws}`}
+                    style={{ width: drawWidth }}
+                    title={`Drawn: ${profile.stats.gamesDrawn}`}
                   ></div>
                   <div
-                    className="bg-[#EF4444] hover:brightness-125 transition-all"
-                    style={{ width: "10%" }}
-                    title={`Lost: ${playerStats.performance.losses}`}
+                    className="bg-red-500 hover:brightness-125 transition-all"
+                    style={{ width: lossWidth }}
+                    title={`Lost: ${profile.stats.gamesLost}`}
                   ></div>
                 </div>
 
                 <div className="flex justify-between text-xs font-mono font-bold text-muted-foreground mb-6">
                   <div className="flex items-center gap-1.5">
-                    <div className="w-2 h-2 bg-[#10B981] rounded-full"></div>{" "}
-                    {playerStats.performance.wins} W
+                    <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>{" "}
+                    {profile.stats.gamesWon} W
                   </div>
                   <div className="flex items-center gap-1.5">
                     <div className="w-2 h-2 bg-muted-foreground/50 rounded-full"></div>{" "}
-                    {playerStats.performance.draws} D
+                    {profile.stats.gamesDrawn} D
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <div className="w-2 h-2 bg-[#EF4444] rounded-full"></div>{" "}
-                    {playerStats.performance.losses} L
+                    <div className="w-2 h-2 bg-red-500 rounded-full"></div>{" "}
+                    {profile.stats.gamesLost} L
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-y-5 gap-x-4 pt-5 border-t border-border/60">
                   <div>
                     <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider mb-1">
-                      Avg Opponent
+                      Tourneys Won
                     </p>
                     <p className="font-mono font-bold text-foreground text-lg">
-                      {playerStats.performance.avgOpponent}
+                      {profile.stats.tournamentsWon}
                     </p>
                   </div>
                   <div>
                     <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider mb-1">
-                      Performance
+                      Joined
                     </p>
-                    <p className="font-mono font-bold text-accent text-lg drop-shadow-sm">
-                      {playerStats.performance.perfRating}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider mb-1">
-                      Black Wins
-                    </p>
-                    <p className="font-mono font-bold text-foreground">
-                      {playerStats.performance.blackWins}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider mb-1">
-                      White Wins
-                    </p>
-                    <p className="font-mono font-bold text-foreground">
-                      {playerStats.performance.whiteWins}
+                    <p className="font-mono font-bold text-foreground text-lg">
+                      {new Date(profile.createdAt).getFullYear()}
                     </p>
                   </div>
                 </div>

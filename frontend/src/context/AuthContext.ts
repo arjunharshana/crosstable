@@ -1,16 +1,16 @@
 import { createContext } from "react";
 
 export interface User {
-  id: string;
-  fname: string;
-  lname: string;
+  _id: string;
+  username: string;
+  firstName: string;
+  lastName: string;
   email: string;
 }
 
 export interface AuthContextType {
   user: User | null;
-  token: string | null;
-  login: (token: string, userData: User) => void;
+  login: (userData: User) => void;
   logout: () => void;
   loading: boolean;
 }
