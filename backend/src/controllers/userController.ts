@@ -3,7 +3,7 @@ import User from "../models/user";
 
 export const getProfile = async (req: Request, res: Response) => {
   try {
-    const userId = req.params.id;
+    const userId = (req as any).user.id;
     const user = await User.findById(userId).select(
       "-password -verificationOTP -otpExpiry -passwordResetToken -passwordResetExpires",
     );

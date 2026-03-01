@@ -22,14 +22,12 @@ export default function Login() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Submit triggered! Sending data:", formData);
     try {
       const response = await api.post("/auth/login", {
         email: formData.email,
         password: formData.password,
       });
       login(response.data);
-      console.log("Login Success!", response.data);
       navigate("/dashboard");
     } catch (err) {
       const axiosError = err as AxiosError<{ message: string }>;
