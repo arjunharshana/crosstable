@@ -6,6 +6,12 @@ export interface User {
   firstName: string;
   lastName: string;
   email: string;
+  country?: string;
+  bio?: string;
+  fideId?: string;
+  aicfId?: string;
+  chesscomUsername?: string;
+  timezone?: string;
 }
 
 export interface AuthContextType {

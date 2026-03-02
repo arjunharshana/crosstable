@@ -13,6 +13,7 @@ export interface IUser extends Document {
   avatar?: string;
   bio?: string;
   country?: string;
+  timezone?: string;
 
   title?:
     | "GM"
@@ -69,8 +70,8 @@ const UserSchema: Schema = new Schema(
     googleId: { type: String },
     avatar: { type: String },
     bio: { type: String, maxLength: 500 },
-    country: { type: String, default: "INT", uppercase: true, maxLength: 3 },
-
+    country: { type: String, default: "IND", uppercase: true, maxLength: 3 },
+    timezone: { type: String, default: "Asia/Kolkata" },
     title: { type: String, default: "None" },
 
     chesscomUsername: { type: String, trim: true },

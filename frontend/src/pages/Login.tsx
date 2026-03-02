@@ -23,11 +23,12 @@ export default function Login() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await api.post("/auth/login", {
+      await api.post("/auth/login", {
         email: formData.email,
         password: formData.password,
       });
-      login(response.data);
+      const profileResponse = await api.get("/users/me");
+      login(profileResponse.data);
       navigate("/dashboard");
     } catch (err) {
       const axiosError = err as AxiosError<{ message: string }>;

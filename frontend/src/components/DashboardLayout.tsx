@@ -140,7 +140,7 @@ export default function DashboardLayout() {
               <img
                 alt="Profile"
                 className="h-8 w-8 rounded-full ring-2 ring-background"
-                src={`https://ui-avatars.com/api/?name=${user?.fname}+${user?.lname}&background=1E293B&color=C5A059`}
+                src={`https://ui-avatars.com/api/?name=${user?.firstName}+${user?.lastName}&background=1E293B&color=C5A059`}
               />
             </div>
             {!isSidebarCollapsed && (

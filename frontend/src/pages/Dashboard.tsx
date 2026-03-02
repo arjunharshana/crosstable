@@ -12,7 +12,7 @@ export default function Dashboard() {
           <h1 className="text-2xl md:text-3xl font-serif text-foreground">
             Welcome back,{" "}
             <span className="text-accent font-semibold">
-              {user?.fname || "Nigger"}
+              {user?.firstName || "Blunder Master"}
             </span>
           </h1>
         </div>

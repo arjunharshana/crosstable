@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import api from "../services/api";
 interface UserProfile {
   firstName: string;
@@ -50,6 +51,7 @@ const ratingChartPaths = {
 export default function Profile() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -103,7 +105,10 @@ export default function Profile() {
       {/* Hero Banner Area */}
       <header className="h-56 bg-gradient-to-b from-accent/10 to-background relative z-10 flex flex-col justify-end px-8 pb-8 border-b border-border">
         <div className="absolute top-6 right-8 flex gap-3">
-          <button className="px-4 py-2 bg-card/50 hover:bg-card border border-border rounded-md text-sm text-foreground flex items-center gap-2 backdrop-blur-sm transition-all shadow-sm">
+          <button
+            onClick={() => navigate("/settings")}
+            className="px-4 py-2 bg-card/50 hover:bg-card border border-border rounded-md text-sm text-foreground flex items-center gap-2 backdrop-blur-sm transition-all shadow-sm"
+          >
             <span className="material-symbols-outlined text-[18px]">edit</span>
             Edit Profile
           </button>
