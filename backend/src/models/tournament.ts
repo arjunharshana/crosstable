@@ -1,7 +1,10 @@
 import mongoose, { Document, Schema } from "mongoose";
 
 export interface IParticipant {
-  user: mongoose.Types.ObjectId;
+  user?: mongoose.Types.ObjectId | null;
+  isGuest: boolean;
+  guestName?: string;
+  guestRating?: number;
   joinedAt: Date;
   score: number;
   buchholz: number;
@@ -79,10 +82,13 @@ const TournamentSchema: Schema = new Schema(
 
     participants: [
       {
-        user: { type: Schema.Types.ObjectId, ref: "User" },
+        user: { type: Schema.Types.ObjectId, ref: "User", default: null },
         joinedAt: { type: Date, default: Date.now },
         score: { type: Number, default: 0 },
         buchholz: { type: Number, default: 0 },
+        isGuest: { type: Boolean, default: false },
+        guestName: { type: String, default: null },
+        guestRating: { type: Number, default: 1200 },
       },
     ],
   },
