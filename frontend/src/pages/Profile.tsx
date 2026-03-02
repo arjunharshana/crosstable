@@ -147,7 +147,6 @@ export default function Profile() {
             </h1>
 
             <div className="flex flex-wrap items-center gap-2 mt-3">
-              {/* Dynamic Tags based on Backend Schema (Role tag removed) */}
               {profile.isFideVerified && (
                 <span className="text-blue-500 bg-blue-500/10 border border-blue-500/20 px-2.5 py-1 rounded-full text-[11px] font-mono font-bold uppercase tracking-wider flex items-center gap-1 shadow-sm backdrop-blur-sm">
                   <span className="material-symbols-outlined text-[14px]">

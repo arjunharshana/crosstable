@@ -9,7 +9,6 @@ export interface User {
   country?: string;
   bio?: string;
   fideId?: string;
-  aicfId?: string;
   chesscomUsername?: string;
   timezone?: string;
 }

@@ -17,7 +17,6 @@ export default function Settings() {
     country: "",
     bio: "",
     fideId: "",
-    aicfId: "",
     chesscomUsername: "",
     timezone: "Asia/Kolkata",
   });
@@ -30,7 +29,6 @@ export default function Settings() {
         country: user.country || "",
         bio: user.bio || "",
         fideId: user.fideId || "",
-        aicfId: user.aicfId || "",
         chesscomUsername: user.chesscomUsername || "",
         timezone: user.timezone || "Asia/Kolkata",
       });

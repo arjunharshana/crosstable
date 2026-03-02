@@ -29,7 +29,7 @@ export const updateProfile = async (req: Request, res: Response) => {
       country,
       chesscomUsername,
       fideId,
-      aicfId,
+
     } = req.body;
 
     const updatedUser = await User.findByIdAndUpdate(
@@ -41,7 +41,6 @@ export const updateProfile = async (req: Request, res: Response) => {
           bio,
           country,
           fideId,
-          aicfId,
           chesscomUsername,
         },
       },

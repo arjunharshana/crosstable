@@ -30,7 +30,6 @@ export interface IUser extends Document {
   chesscomUsername?: string;
   fideId?: string;
   isFideVerified: boolean;
-  aicfId?: string;
 
   ratings: {
     classical: number;
@@ -77,7 +76,6 @@ const UserSchema: Schema = new Schema(
     chesscomUsername: { type: String, trim: true },
     fideId: { type: String, trim: true },
     isFideVerified: { type: Boolean, default: false },
-    aicfId: { type: String, trim: true },
 
     ratings: {
       classical: { type: Number, default: 1200 },
