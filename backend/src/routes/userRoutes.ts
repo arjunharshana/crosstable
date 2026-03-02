@@ -10,7 +10,6 @@ const router = express.Router();
 
 router.get("/me", authMiddleware, getProfile);
 router.put("/profile", authMiddleware, updateProfile);
-
 //Public profile route
 router.get("/:username", getPublicProfile);
 

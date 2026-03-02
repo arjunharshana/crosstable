@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../hooks/useAuth";
-import { AxiosError } from "axios"; // Import AxiosError for proper error typing
-import api from "../services/api"; // Make sure to import your api instance!
+import { AxiosError } from "axios";
+import api from "../services/api";
 
 export default function Settings() {
   const { user, login } = useAuth();
@@ -11,7 +11,6 @@ export default function Settings() {
 
   const tabs = ["General", "Chess Identity", "Notifications", "Security"];
 
-  // 1. Setup Form State
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -23,7 +22,6 @@ export default function Settings() {
     timezone: "Asia/Kolkata",
   });
 
-  // 2. Populate form when user data loads
   useEffect(() => {
     if (user) {
       setFormData({
@@ -34,12 +32,11 @@ export default function Settings() {
         fideId: user.fideId || "",
         aicfId: user.aicfId || "",
         chesscomUsername: user.chesscomUsername || "",
-        timezone: user.timezone || "Asia/Kolkata", // You can enhance this by storing user timezone in backend
+        timezone: user.timezone || "Asia/Kolkata",
       });
     }
   }, [user]);
 
-  // 3. Handle Input Changes
   const handleChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
@@ -48,7 +45,6 @@ export default function Settings() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // 4. Handle Save to Backend
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -56,14 +52,11 @@ export default function Settings() {
 
     try {
       const response = await api.put("/users/profile", formData);
-      login(response.data.user); // Update global state instantly
+      login(response.data.user);
       setMessage({ type: "success", text: "Profile updated successfully!" });
 
-      // Clear success message after 3 seconds
       setTimeout(() => setMessage({ type: "", text: "" }), 3000);
     } catch (error) {
-      // Remove the ': any' from here
-      // Tell TypeScript this is an Axios error containing a message
       const axiosError = error as AxiosError<{ message: string }>;
 
       setMessage({
@@ -125,7 +118,6 @@ export default function Settings() {
 
       {/* Tab Content */}
       <div className="max-w-4xl">
-        {/* We wrap the content in a single form that fires handleSubmit */}
         <form onSubmit={handleSubmit}>
           {/* GENERAL TAB */}
           {activeTab === "General" && (
@@ -187,13 +179,32 @@ export default function Settings() {
                         required
                       />
                     </div>
-                    <div className="group md:col-span-2">
+                    {/* Username (Read-Only) */}
+                    <div className="group">
+                      <label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">
+                        Username
+                      </label>
+                      <div className="relative">
+                        <span className="absolute left-3 top-2.5 text-muted-foreground font-mono text-lg">
+                          @
+                        </span>
+                        <input
+                          className="w-full bg-background/50 border border-border text-foreground font-mono rounded-md py-2.5 pl-8 pr-4 cursor-not-allowed opacity-80"
+                          type="text"
+                          value={user?.username || ""}
+                          disabled
+                        />
+                      </div>
+                    </div>
+
+                    {/* Account Email (Read-Only) */}
+                    <div className="group">
                       <label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">
                         Account Email
                       </label>
                       <div className="relative">
                         <input
-                          className="w-full bg-background/50 border border-border text-muted-foreground rounded-md py-2.5 pl-4 pr-10 cursor-not-allowed"
+                          className="w-full bg-background/50 border border-border text-muted-foreground rounded-md py-2.5 pl-4 pr-10 cursor-not-allowed opacity-80"
                           type="email"
                           value={user?.email || ""}
                           disabled
@@ -202,6 +213,9 @@ export default function Settings() {
                           lock
                         </span>
                       </div>
+                      <p className="mt-1.5 text-[10px] text-muted-foreground">
+                        Email addresses cannot be changed directly.
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -228,7 +242,6 @@ export default function Settings() {
                             flag
                           </span>
 
-                          {/* Replaced input with a styled select dropdown */}
                           <select
                             name="country"
                             value={formData.country}
@@ -250,7 +263,6 @@ export default function Settings() {
                             <option value="UZB">UZB - Uzbekistan</option>
                             <option value="NED">NED - Netherlands</option>
                             <option value="ESP">ESP - Spain</option>
-                            {/* Feel free to add more FIDE codes here! */}
                           </select>
 
                           {/* Dropdown arrow icon */}
@@ -353,27 +365,23 @@ export default function Settings() {
           {/* CHESS IDENTITY TAB */}
           {activeTab === "Chess Identity" && (
             <div className="animate-in fade-in slide-in-from-right-4 duration-500">
-              {/* Official Credentials Card */}
+              {/* FIDE ID Block */}
               <div className="bg-card border border-border rounded-md shadow-[inset_0_0_20px_rgba(0,0,0,0.2)] relative overflow-hidden mb-8">
                 <div className="absolute top-0 right-0 p-8 opacity-[0.03] pointer-events-none">
                   <span className="material-symbols-outlined text-9xl">
                     fingerprint
                   </span>
                 </div>
-
-                <div className="p-6 md:p-8 border-b border-border/50 flex flex-col sm:flex-row justify-between sm:items-center gap-4">
-                  <div>
-                    <h2 className="text-xl font-serif font-bold text-foreground mb-1">
-                      Official Credentials
-                    </h2>
-                    <p className="text-sm text-muted-foreground">
-                      Link your federation IDs.
-                    </p>
-                  </div>
+                <div className="p-6 md:p-8 border-b border-border/50">
+                  <h2 className="text-xl font-serif font-bold text-foreground mb-1">
+                    Official FIDE Identity
+                  </h2>
+                  <p className="text-sm text-muted-foreground">
+                    Enter your FIDE ID. Verification will be handled manually by
+                    admins.
+                  </p>
                 </div>
-
-                <div className="p-6 md:p-8 grid grid-cols-1 md:grid-cols-2 gap-8 relative z-10">
-                  {/* FIDE ID */}
+                <div className="p-6 md:p-8 relative z-10 max-w-md">
                   <div className="group">
                     <label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 group-focus-within:text-accent transition-colors">
                       FIDE ID
@@ -386,28 +394,8 @@ export default function Settings() {
                         name="fideId"
                         value={formData.fideId}
                         onChange={handleChange}
-                        className="w-full bg-background border border-border text-foreground font-mono rounded-md py-2.5 pl-10 pr-4 focus:ring-1 focus:outline-none focus:border-accent focus:ring-accent transition-colors placeholder-muted-foreground/50"
+                        className="w-full bg-background border border-border text-foreground font-mono rounded-md py-2.5 pl-10 pr-4 focus:ring-1 focus:outline-none focus:border-accent focus:ring-accent transition-colors"
                         placeholder="e.g. 15000000"
-                        type="text"
-                      />
-                    </div>
-                  </div>
-
-                  {/* AICF ID */}
-                  <div className="group">
-                    <label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 group-focus-within:text-accent transition-colors">
-                      AICF ID (India)
-                    </label>
-                    <div className="relative">
-                      <span className="absolute left-3 top-2.5 text-muted-foreground material-symbols-outlined text-lg group-focus-within:text-accent transition-colors">
-                        flag
-                      </span>
-                      <input
-                        name="aicfId"
-                        value={formData.aicfId}
-                        onChange={handleChange}
-                        className="w-full bg-background border border-border text-foreground font-mono rounded-md py-2.5 pl-10 pr-4 focus:ring-1 focus:outline-none focus:border-accent focus:ring-accent transition-colors placeholder-muted-foreground/50"
-                        placeholder="e.g. 12345678"
                         type="text"
                       />
                     </div>
@@ -415,24 +403,25 @@ export default function Settings() {
                 </div>
               </div>
 
-              {/* Online Platforms Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-                {/* Chess.com */}
-                <div className="bg-card border border-border rounded-md p-6 relative group hover:border-accent/30 transition-all">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 bg-[#7FA650] rounded-md flex items-center justify-center text-white shadow-lg">
-                        <span className="material-symbols-outlined">
-                          chess_pawn
-                        </span>
-                      </div>
-                      <div>
-                        <h3 className="font-bold text-foreground text-sm">
-                          Chess.com
-                        </h3>
-                      </div>
-                    </div>
+              {/* Chess.com API Verification Block */}
+              <div className="bg-card border border-border rounded-md p-6 md:p-8 relative group hover:border-accent/30 transition-all mb-8 max-w-md">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="h-10 w-10 bg-[#7FA650] rounded-md flex items-center justify-center text-white shadow-lg">
+                    <span className="material-symbols-outlined">
+                      chess_pawn
+                    </span>
                   </div>
+                  <div>
+                    <h3 className="font-bold text-foreground text-sm">
+                      Chess.com Verification
+                    </h3>
+                    <p className="text-[10px] text-muted-foreground">
+                      Real-time API check
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-3">
                   <div className="relative">
                     <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">
                       Username
@@ -441,35 +430,34 @@ export default function Settings() {
                       name="chesscomUsername"
                       value={formData.chesscomUsername}
                       onChange={handleChange}
-                      className="w-full bg-background border border-border text-foreground font-mono text-sm rounded-md py-2 px-3 focus:outline-none focus:ring-1 focus:border-[#7FA650] focus:ring-[#7FA650] transition-colors"
+                      className="w-full bg-background border border-border text-foreground font-mono text-sm rounded-md py-2.5 px-3 focus:outline-none focus:ring-1 focus:border-[#7FA650] focus:ring-[#7FA650] transition-colors"
                       type="text"
                       placeholder="Enter username"
                     />
                   </div>
+                  <button
+                    type="button"
+                    className="w-full bg-[#7FA650] hover:bg-[#6D8E45] text-white font-bold py-2.5 px-4 rounded-md transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <span className="material-symbols-outlined text-lg">
+                      check_circle
+                    </span>
+                    Verify & Link Account
+                  </button>
                 </div>
               </div>
 
-              {/* Save Button */}
+              {/* Save Button for FIDE ID */}
               <div className="flex items-center justify-end gap-4 pb-8">
-                <button
-                  type="button"
-                  className="text-muted-foreground hover:text-foreground text-sm font-medium px-4 py-2 transition-colors"
-                >
-                  Discard Changes
-                </button>
                 <button
                   type="submit"
                   disabled={loading}
-                  className="bg-accent hover:bg-accent/90 text-[#0B1120] font-bold py-2.5 px-8 rounded-md shadow-[0_0_15px_rgba(197,160,89,0.15)] transition-all flex items-center gap-2 transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="bg-accent hover:bg-accent/90 text-[#0B1120] font-bold py-2.5 px-8 rounded-md shadow-[0_0_15px_rgba(197,160,89,0.15)] transition-all flex items-center gap-2"
                 >
-                  {loading ? (
-                    <span className="w-5 h-5 border-2 border-[#0B1120] border-t-transparent rounded-full animate-spin"></span>
-                  ) : (
-                    <span className="material-symbols-outlined text-lg">
-                      save
-                    </span>
-                  )}
-                  {loading ? "Saving..." : "Save Identity"}
+                  <span className="material-symbols-outlined text-lg">
+                    save
+                  </span>
+                  Save Identity
                 </button>
               </div>
             </div>

@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import User from "../models/user";
+import axios from "axios";
 
 export const getProfile = async (req: Request, res: Response) => {
   try {
@@ -68,7 +69,7 @@ export const getPublicProfile = async (req: Request, res: Response) => {
     const { username } = req.params;
 
     const user = await User.findOne({ username }).select(
-      "username firstName lastName avatar bio country role title fideId aicfId isFideVerified ratings stats createdAt",
+      "username firstName lastName country fideId isFideVerified ratings stats createdAt",
     );
 
     if (!user) {

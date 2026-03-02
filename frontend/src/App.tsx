@@ -12,6 +12,7 @@ import MyTournaments from "./pages/MyTournaments";
 import MyGames from "./pages/MyGames";
 import Profile from "./pages/Profile";
 import ProtectedRoute from "./components/ProtectedRoute";
+import PublicProfile from "./pages/PublicProfile";
 
 function App() {
   return (
@@ -32,6 +33,7 @@ function App() {
             <Route path="/games" element={<MyGames />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/users/:username" element={<PublicProfile />} />
           </Route>
         </Route>
       </Routes>
