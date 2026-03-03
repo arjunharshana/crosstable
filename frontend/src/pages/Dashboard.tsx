@@ -21,7 +21,12 @@ export default function Dashboard() {
           <span className="material-symbols-outlined text-xl group-hover:rotate-90 transition-transform duration-300">
             add
           </span>
-          Create New Tournament
+          <Link
+            to="/create-tournament"
+            className="text-xs uppercase tracking-wider"
+          >
+            Create New Tournament
+          </Link>
         </button>
       </div>
 
