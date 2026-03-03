@@ -3,7 +3,9 @@ import { useParams, useNavigate } from "react-router-dom";
 import api from "../services/api";
 import { AxiosError } from "axios";
 import AddPlayerModal from "../components/AddPlayer";
+import AddArbiterModal from "../components/AddArbiter";
 import { Link } from "react-router-dom";
+import { useAuth } from "../hooks/useAuth";
 
 interface Participant {
   _id: string;
@@ -39,6 +41,12 @@ interface Tournament {
     firstName: string;
     lastName: string;
   };
+  arbiters?: {
+    _id: string;
+    username: string;
+    firstName: string;
+    lastName: string;
+  }[];
   participants: Participant[];
 }
 
@@ -50,7 +58,11 @@ export default function TournamentDetails() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [isAddPlayerModalOpen, setIsAddPlayerModalOpen] = useState(false);
+  const [isArbiterModalOpen, setIsArbiterModalOpen] = useState(false);
 
+  const { user } = useAuth();
+
+  const isOrganizer = user?._id === tournament?.organizer._id;
   // Fetch the tournament data
   useEffect(() => {
     const fetchTournament = async () => {
@@ -97,6 +109,29 @@ export default function TournamentDetails() {
     }
   };
 
+  // Handle removing a Deputy Arbiter
+  const handleRemoveArbiter = async (arbiterId: string) => {
+    if (!window.confirm("Are you sure you want to remove this arbiter?"))
+      return;
+    try {
+      await api.delete(`/tournaments/${id}/remove-arbiter/${arbiterId}`);
+      setTournament((prev) =>
+        prev
+          ? {
+              ...prev,
+              arbiters: prev.arbiters?.filter((a) => a._id !== arbiterId),
+            }
+          : prev,
+      );
+    } catch (err) {
+      const axiosError = err as AxiosError<{ message: string }>;
+      const errorMessage =
+        axiosError.response?.data?.message || "Failed to remove arbiter.";
+
+      console.error("Remove Arbiter Error:", errorMessage);
+      alert(errorMessage);
+    }
+  };
   const handleDeleteTournament = async () => {
     if (
       !window.confirm(
@@ -189,30 +224,45 @@ export default function TournamentDetails() {
         </div>
 
         <div className="flex items-center gap-3">
-          {/* New Delete Button */}
-          <button
-            onClick={handleDeleteTournament}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-red-500/30 text-red-500 hover:bg-red-500/10 hover:border-red-500/50 transition-all font-bold text-sm tracking-wide group"
-          >
-            <span className="material-symbols-outlined text-[20px] group-hover:scale-110 transition-transform">
-              delete_forever
-            </span>
-            <span className="hidden md:block">DELETE</span>
-          </button>
-          <Link
-            to={`/tournaments/${id}/edit`}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-border text-foreground hover:bg-card transition-all font-bold text-sm tracking-wide"
-          >
-            <span className="material-symbols-outlined text-[20px]">tune</span>
-            EDIT
-          </Link>
-          <button
-            disabled={tournament.status !== "Upcoming"}
-            className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-accent text-[#0B1120] hover:brightness-110 transition-all font-black text-sm tracking-widest shadow-[0_0_15px_rgba(197,160,89,0.2)] disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <span className="material-symbols-outlined">play_arrow</span>
-            START ROUND 1
-          </button>
+          {isOrganizer ? (
+            <>
+              {/* New Delete Button */}
+              <button
+                onClick={handleDeleteTournament}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-red-500/30 text-red-500 hover:bg-red-500/10 hover:border-red-500/50 transition-all font-bold text-sm tracking-wide group"
+              >
+                <span className="material-symbols-outlined text-[20px] group-hover:scale-110 transition-transform">
+                  delete_forever
+                </span>
+                <span className="hidden md:block">DELETE</span>
+              </button>
+              <Link
+                to={`/tournaments/${id}/edit`}
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-border text-foreground hover:bg-card transition-all font-bold text-sm tracking-wide"
+              >
+                <span className="material-symbols-outlined text-[20px]">
+                  tune
+                </span>
+                EDIT
+              </Link>
+              <button
+                disabled={tournament.status !== "Upcoming"}
+                className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-accent text-[#0B1120] hover:brightness-110 transition-all font-black text-sm tracking-widest shadow-[0_0_15px_rgba(197,160,89,0.2)] disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <span className="material-symbols-outlined">play_arrow</span>
+                START ROUND 1
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={() => alert("Join logic goes here!")}
+              disabled={tournament.status !== "Upcoming"}
+              className="flex items-center gap-2 px-8 py-2.5 rounded-xl bg-accent text-[#0B1120] hover:brightness-110 transition-all font-black text-sm tracking-widest shadow-[0_0_15px_rgba(197,160,89,0.2)] disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <span className="material-symbols-outlined">sports_esports</span>
+              JOIN TOURNAMENT
+            </button>
+          )}
         </div>
       </header>
 
@@ -295,25 +345,75 @@ export default function TournamentDetails() {
             </div>
 
             {/* Organizer Card */}
-            <div className="bg-card border border-border rounded-2xl p-6">
-              <h3 className="text-xs font-black tracking-[0.3em] uppercase text-muted-foreground mb-6">
-                Organizer
-              </h3>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-background border border-border flex items-center justify-center">
-                  <span className="material-symbols-outlined text-accent">
-                    shield_person
-                  </span>
+            {/* Organizers / Arbiters Card */}
+            <div className="bg-card border border-border rounded-2xl p-6 shadow-[inset_0_0_20px_rgba(0,0,0,0.2)]">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-xs font-black tracking-[0.3em] uppercase text-muted-foreground">
+                  Arbiters
+                </h3>
+                {isOrganizer && (
+                  <button
+                    onClick={() => setIsArbiterModalOpen(true)}
+                    className="flex items-center gap-1 text-[10px] uppercase font-bold tracking-wider text-accent bg-accent/10 hover:bg-accent hover:text-[#0B1120] px-2 py-1.5 rounded transition-colors"
+                  >
+                    <span className="material-symbols-outlined text-[14px]">
+                      add
+                    </span>
+                    Add
+                  </button>
+                )}
+              </div>
+
+              <div className="space-y-4">
+                {/* Chief Arbiter (Creator) */}
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-background border border-border flex items-center justify-center shrink-0">
+                    <span className="material-symbols-outlined text-accent">
+                      shield_person
+                    </span>
+                  </div>
+                  <div className="flex-1 truncate">
+                    <p className="text-sm font-bold text-foreground truncate">
+                      {tournament.organizer.firstName}{" "}
+                      {tournament.organizer.lastName}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-tighter">
+                      Chief Arbiter
+                    </p>
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <p className="text-sm font-bold text-foreground">
-                    {tournament.organizer.firstName}{" "}
-                    {tournament.organizer.lastName}
-                  </p>
-                  <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-tighter">
-                    Chief Arbiter
-                  </p>
-                </div>
+
+                {tournament.arbiters?.map((arbiter) => (
+                  <div
+                    key={arbiter._id}
+                    className="flex items-center gap-3 border-t border-border/50 pt-4"
+                  >
+                    <div className="w-10 h-10 rounded-full bg-background border border-border flex items-center justify-center shrink-0">
+                      <span className="material-symbols-outlined text-muted-foreground">
+                        gavel
+                      </span>
+                    </div>
+                    <div className="flex-1 truncate">
+                      <p className="text-sm font-bold text-foreground truncate">
+                        {arbiter.firstName} {arbiter.lastName}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-tighter">
+                        Deputy Arbiter
+                      </p>
+                    </div>
+                    {isOrganizer && (
+                      <button
+                        onClick={() => handleRemoveArbiter(arbiter._id)}
+                        className="text-muted-foreground hover:text-red-500 transition-colors p-1"
+                        title="Remove Arbiter"
+                      >
+                        <span className="material-symbols-outlined text-sm">
+                          person_remove
+                        </span>
+                      </button>
+                    )}
+                  </div>
+                ))}
               </div>
             </div>
           </div>
@@ -331,15 +431,17 @@ export default function TournamentDetails() {
                   </span>
                 </div>
 
-                <button
-                  onClick={() => setIsAddPlayerModalOpen(true)}
-                  className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-accent/10 border border-accent/20 text-accent hover:bg-accent hover:text-[#0B1120] transition-all font-bold text-xs tracking-widest group"
-                >
-                  <span className="material-symbols-outlined text-[18px] leading-none">
-                    person_add
-                  </span>
-                  <span className="leading-none mt-[1px]">ADD PLAYER</span>
-                </button>
+                {isOrganizer && (
+                  <button
+                    onClick={() => setIsAddPlayerModalOpen(true)}
+                    className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-accent/10 border border-accent/20 text-accent hover:bg-accent hover:text-[#0B1120] transition-all font-bold text-xs tracking-widest group"
+                  >
+                    <span className="material-symbols-outlined text-[18px] leading-none">
+                      person_add
+                    </span>
+                    <span className="leading-none mt-[1px]">ADD PLAYER</span>
+                  </button>
+                )}
               </div>
 
               <div className="overflow-x-auto">
@@ -435,15 +537,17 @@ export default function TournamentDetails() {
                               </span>
                             </td>
                             <td className="px-6 py-4 text-right">
-                              <button
-                                onClick={() => handleRemovePlayer(p._id)}
-                                className="p-2 text-muted-foreground hover:text-red-400 opacity-0 group-hover/row:opacity-100 transition-all focus:opacity-100"
-                                title="Remove Player"
-                              >
-                                <span className="material-symbols-outlined text-lg">
-                                  delete
-                                </span>
-                              </button>
+                              {isOrganizer && (
+                                <button
+                                  onClick={() => handleRemovePlayer(p._id)}
+                                  className="p-2 text-muted-foreground hover:text-red-400 opacity-0 group-hover/row:opacity-100 transition-all focus:opacity-100"
+                                  title="Remove Player"
+                                >
+                                  <span className="material-symbols-outlined text-lg">
+                                    delete
+                                  </span>
+                                </button>
+                              )}
                             </td>
                           </tr>
                         );
@@ -459,6 +563,14 @@ export default function TournamentDetails() {
       <AddPlayerModal
         isOpen={isAddPlayerModalOpen}
         onClose={() => setIsAddPlayerModalOpen(false)}
+        tournamentId={tournament._id}
+        onSuccess={() => {
+          api.get(`/tournaments/${id}`).then((res) => setTournament(res.data));
+        }}
+      />
+      <AddArbiterModal
+        isOpen={isArbiterModalOpen}
+        onClose={() => setIsArbiterModalOpen(false)}
         tournamentId={tournament._id}
         onSuccess={() => {
           api.get(`/tournaments/${id}`).then((res) => setTournament(res.data));

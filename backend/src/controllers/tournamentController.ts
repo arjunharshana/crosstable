@@ -55,6 +55,7 @@ export const getTournamentById = async (req: Request, res: Response) => {
   try {
     const tournament = await Tournament.findById(req.params.id)
       .populate("organizer", "username firstName lastName")
+      .populate("arbiters", "username firstName lastName")
       .populate("participants.user", "username firstName lastName");
     if (!tournament) {
       return res.status(404).json({ message: "Tournament not found" });
@@ -265,5 +266,60 @@ export const removePlayerManually = async (req: Request, res: Response) => {
   } catch (error) {
     console.error("Error removing player:", error);
     res.status(500).json({ message: "Server error removing player" });
+  }
+};
+
+export const addArbiter = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { userId } = req.body;
+    const organizerId = (req as any).user.id;
+
+    const tournament = await Tournament.findOne({
+      _id: id,
+      organizer: organizerId,
+    });
+    if (!tournament)
+      return res
+        .status(404)
+        .json({ message: "Tournament not found or unauthorized" });
+
+    if (
+      tournament.arbiters.includes(userId) ||
+      tournament.organizer.toString() === userId
+    ) {
+      return res.status(400).json({ message: "User is already an arbiter" });
+    }
+
+    tournament.arbiters.push(userId);
+    await tournament.save();
+    res.status(200).json({ message: "Arbiter added", tournament });
+  } catch (error) {
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+export const removeArbiter = async (req: Request, res: Response) => {
+  try {
+    const { id, arbiterId } = req.params;
+    const organizerId = (req as any).user.id;
+    const tournament = await Tournament.findOneAndUpdate(
+      { _id: id, organizer: organizerId },
+      { $pull: { arbiters: arbiterId } },
+      { new: true },
+    );
+
+    if (!tournament) {
+      return res
+        .status(404)
+        .json({ message: "Tournament not found or unauthorized" });
+    }
+
+    res
+      .status(200)
+      .json({ message: "Arbiter removed successfully", tournament });
+  } catch (error) {
+    console.error("Error removing arbiter:", error);
+    res.status(500).json({ message: "Server error removing arbiter" });
   }
 };

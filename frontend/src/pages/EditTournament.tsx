@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import api from "../services/api";
 import { AxiosError } from "axios";
+import { useAuth } from "../hooks/useAuth";
 
 export default function EditTournament() {
   const { id } = useParams<{ id: string }>();
@@ -9,6 +10,7 @@ export default function EditTournament() {
   const [loading, setLoading] = useState(false);
   const [initialFetchLoading, setInitialFetchLoading] = useState(true);
   const [error, setError] = useState("");
+  const { user } = useAuth();
 
   const [formData, setFormData] = useState({
     name: "",
@@ -30,6 +32,13 @@ export default function EditTournament() {
       try {
         const response = await api.get(`/tournaments/${id}`);
         const data = response.data;
+
+        if (data.organizer._id !== user?._id) {
+          setError("You do not have permission to edit this tournament.");
+          navigate(`/tournaments/${id}`);
+          setInitialFetchLoading(false);
+          return;
+        }
 
         const [base, inc] = data.timeControl
           ? data.timeControl.split("+")

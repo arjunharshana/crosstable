@@ -8,6 +8,8 @@ import {
   joinTournament,
   addPlayerManually,
   removePlayerManually,
+  addArbiter,
+  removeArbiter,
 } from "../controllers/tournamentController";
 import authMiddleware from "../middleware/authMiddleware";
 
@@ -19,11 +21,13 @@ router.get("/:id", getTournamentById);
 router.put("/:id", authMiddleware, updateTournament);
 router.delete("/:id", authMiddleware, deleteTournament);
 router.post("/:id/join", authMiddleware, joinTournament);
+router.post("/:id/add-arbiter", authMiddleware, addArbiter);
 router.post("/:id/add-player", authMiddleware, addPlayerManually);
 router.delete(
   "/:id/remove-player/:participantId",
   authMiddleware,
   removePlayerManually,
 );
+router.delete("/:id/remove-arbiter/:arbiterId", authMiddleware, removeArbiter);
 
 export default router;
