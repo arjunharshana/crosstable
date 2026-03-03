@@ -16,18 +16,17 @@ export default function Dashboard() {
             </span>
           </h1>
         </div>
-
-        <button className="bg-accent hover:bg-accent/90 text-[#0B1120] font-bold py-3 px-6 rounded-md flex items-center justify-center gap-2 transition-all shadow-[0_0_15px_rgba(197,160,89,0.15)] hover:shadow-[0_0_20px_rgba(197,160,89,0.3)] group whitespace-nowrap transform hover:-translate-y-0.5">
-          <span className="material-symbols-outlined text-xl group-hover:rotate-90 transition-transform duration-300">
-            add
-          </span>
-          <Link
-            to="/create-tournament"
-            className="text-xs uppercase tracking-wider"
-          >
+        <Link
+          to="/create-tournament"
+          className="text-xs uppercase tracking-wider"
+        >
+          <button className="bg-accent hover:bg-accent/90 text-[#0B1120] font-bold py-3 px-6 rounded-md flex items-center justify-center gap-2 transition-all shadow-[0_0_15px_rgba(197,160,89,0.15)] hover:shadow-[0_0_20px_rgba(197,160,89,0.3)] group whitespace-nowrap transform hover:-translate-y-0.5">
+            <span className="material-symbols-outlined text-xl group-hover:rotate-90 transition-transform duration-300">
+              add
+            </span>
             Create New Tournament
-          </Link>
-        </button>
+          </button>
+        </Link>
       </div>
 
       {/* Stats Grid */}

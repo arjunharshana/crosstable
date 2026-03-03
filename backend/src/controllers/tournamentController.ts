@@ -14,7 +14,6 @@ export const createTournament = async (req: Request, res: Response) => {
       location,
       access,
     } = req.body;
-    console.log("Received tournament creation request with data:", req.body);
     const tournament = new Tournament({
       name,
       description,
@@ -54,11 +53,9 @@ export const getAllTournaments = async (req: Request, res: Response) => {
 
 export const getTournamentById = async (req: Request, res: Response) => {
   try {
-    console.log("1. Frontend requested Tournament ID:", req.params.id);
     const tournament = await Tournament.findById(req.params.id)
       .populate("organizer", "username firstName lastName")
       .populate("participants.user", "username firstName lastName");
-    console.log("2. Mongoose found:", tournament ? "Success!" : "Null");
     if (!tournament) {
       return res.status(404).json({ message: "Tournament not found" });
     }

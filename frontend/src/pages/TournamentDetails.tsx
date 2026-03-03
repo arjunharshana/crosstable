@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import api from "../services/api";
 import { AxiosError } from "axios";
 import AddPlayerModal from "../components/AddPlayer";
+import { Link } from "react-router-dom";
 
 interface Participant {
   _id: string;
@@ -96,6 +97,29 @@ export default function TournamentDetails() {
     }
   };
 
+  const handleDeleteTournament = async () => {
+    if (
+      !window.confirm(
+        "WARNING: Are you sure you want to completely delete this tournament? This action cannot be undone.",
+      )
+    ) {
+      return;
+    }
+
+    try {
+      await api.delete(`/tournaments/${id}`);
+      // Send them back to the main dashboard after successful deletion
+      navigate("/dashboard");
+    } catch (err) {
+      const axiosError = err as AxiosError<{ message: string }>;
+      const errorMessage =
+        axiosError.response?.data?.message || "Failed to delete tournament.";
+
+      console.error("Delete Tournament Error:", errorMessage);
+      alert(errorMessage);
+    }
+  };
+
   if (loading)
     return (
       <div className="p-8 flex justify-center">
@@ -124,7 +148,7 @@ export default function TournamentDetails() {
       <header className="sticky top-0 z-20 p-6 md:p-8 flex flex-wrap items-center justify-between gap-6 bg-background/90 backdrop-blur-md border-b border-border">
         <div className="flex flex-col gap-2">
           <div className="flex items-center gap-4">
-            <h2 className="text-3xl md:text-5xl font-serif font-black tracking-tight text-foreground italic">
+            <h2 className="text-3xl md:text-5xl font-serif font-black tracking-tight text-foreground">
               {tournament.name}
             </h2>
             <span
@@ -165,10 +189,23 @@ export default function TournamentDetails() {
         </div>
 
         <div className="flex items-center gap-3">
-          <button className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-border text-foreground hover:bg-card transition-all font-bold text-sm tracking-wide">
+          {/* New Delete Button */}
+          <button
+            onClick={handleDeleteTournament}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-red-500/30 text-red-500 hover:bg-red-500/10 hover:border-red-500/50 transition-all font-bold text-sm tracking-wide group"
+          >
+            <span className="material-symbols-outlined text-[20px] group-hover:scale-110 transition-transform">
+              delete_forever
+            </span>
+            <span className="hidden md:block">DELETE</span>
+          </button>
+          <Link
+            to={`/tournaments/${id}/edit`}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-border text-foreground hover:bg-card transition-all font-bold text-sm tracking-wide"
+          >
             <span className="material-symbols-outlined text-[20px]">tune</span>
             EDIT
-          </button>
+          </Link>
           <button
             disabled={tournament.status !== "Upcoming"}
             className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-accent text-[#0B1120] hover:brightness-110 transition-all font-black text-sm tracking-widest shadow-[0_0_15px_rgba(197,160,89,0.2)] disabled:opacity-50 disabled:cursor-not-allowed"
@@ -285,22 +322,23 @@ export default function TournamentDetails() {
           <div className="col-span-1 lg:col-span-8">
             <div className="bg-card border border-border rounded-2xl flex flex-col h-full overflow-hidden shadow-[inset_0_0_20px_rgba(0,0,0,0.2)]">
               <div className="p-6 border-b border-border flex items-center justify-between">
-                <div className="flex items-baseline gap-3">
+                <div className="flex items-center gap-3">
                   <h3 className="text-xl font-serif font-bold text-foreground">
                     Participants
                   </h3>
-                  <span className="text-sm font-mono text-accent bg-accent/10 px-2 rounded">
+                  <span className="text-sm font-mono text-accent bg-accent/10 px-2 py-0.5 rounded-md">
                     {tournament.participants.length}
                   </span>
                 </div>
+
                 <button
                   onClick={() => setIsAddPlayerModalOpen(true)}
-                  className="..."
+                  className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-accent/10 border border-accent/20 text-accent hover:bg-accent hover:text-[#0B1120] transition-all font-bold text-xs tracking-widest group"
                 >
-                  <span className="material-symbols-outlined text-sm">
+                  <span className="material-symbols-outlined text-[18px] leading-none">
                     person_add
                   </span>
-                  ADD PLAYER
+                  <span className="leading-none mt-[1px]">ADD PLAYER</span>
                 </button>
               </div>
 
