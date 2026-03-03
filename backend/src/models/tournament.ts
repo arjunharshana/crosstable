@@ -15,13 +15,17 @@ export interface ITournament extends Document {
   description: string;
   organizer: mongoose.Types.ObjectId;
   format: "Swiss" | "Round Robin" | "Knockout";
+  formatType: "Classical" | "Rapid" | "Blitz";
   timeControl: string;
   status: "Upcoming" | "Ongoing" | "Completed";
+  tournamentType: "Solo" | "Team";
+  venueType: "Online" | "Offline";
   totalRounds: number;
   currentRound: number;
   startDate: Date;
   endDate?: Date;
   location: string;
+  access: "Public" | "Private";
   participants: IParticipant[];
 }
 
@@ -47,6 +51,11 @@ const TournamentSchema: Schema = new Schema(
       type: String,
       enum: ["Swiss", "Round Robin", "Knockout"],
       default: "Swiss",
+    },
+    formatType: {
+      type: String,
+      enum: ["Classical", "Rapid", "Blitz"],
+      default: "Blitz",
     },
     timeControl: {
       type: String,
@@ -79,7 +88,21 @@ const TournamentSchema: Schema = new Schema(
       required: true,
       default: "Online",
     },
-
+    access: {
+      type: String,
+      enum: ["Public", "Private"],
+      default: "Public",
+    },
+    tournamentType: {
+      type: String,
+      enum: ["Solo", "Team"],
+      default: "Solo",
+    },
+    venueType: {
+      type: String,
+      enum: ["Online", "Offline"],
+      default: "Online",
+    },
     participants: [
       {
         user: { type: Schema.Types.ObjectId, ref: "User", default: null },

@@ -11,6 +11,9 @@ export default function CreateTournament() {
   const [formData, setFormData] = useState({
     name: "",
     format: "Swiss",
+    formatType: "Blitz",
+    tournamentType: "Solo",
+    venueType: "Online",
     location: "",
     description: "",
     timeControlBase: "3",
@@ -33,16 +36,35 @@ export default function CreateTournament() {
     setLoading(true);
     setError("");
 
+    if (!formData.startDate) {
+      setError("Start date is required.");
+      setLoading(false);
+      return;
+    }
+    const selectedDate = new Date(formData.startDate);
+    const now = new Date();
+    if (selectedDate < now) {
+      setError("Tournament start date and time cannot be in the past.");
+      setLoading(false);
+      return;
+    }
+
     try {
       const timeControlString = `${formData.timeControlBase}+${formData.timeControlIncrement}`;
+
+      const finalLocation =
+        formData.venueType === "Online" ? "Online" : formData.location;
 
       const response = await api.post("/tournaments", {
         name: formData.name,
         description: formData.description,
         format: formData.format,
-        location: formData.location,
+        formatType: formData.formatType,
+        tournamentType: formData.tournamentType,
+        location: finalLocation,
         timeControl: timeControlString,
         totalRounds: Number(formData.totalRounds),
+        access: formData.access,
         startDate: formData.startDate || new Date().toISOString(),
       });
 
@@ -55,6 +77,8 @@ export default function CreateTournament() {
 
       console.error("Create Tournament Error:", errorMessage);
       alert(errorMessage);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -103,7 +127,7 @@ export default function CreateTournament() {
       </header>
 
       {/* Main Content Area */}
-      <div className="flex-1 p-4 md:p-6 pb-32 z-10">
+      <div className="flex-1 p-4 md:p-6  z-10">
         <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6">
           {error && (
             <div className="lg:col-span-12 bg-red-500/10 border border-red-500/50 text-red-500 p-4 rounded-md flex items-center gap-3">
@@ -142,7 +166,7 @@ export default function CreateTournament() {
                     type="text"
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   <div>
                     <label className="text-xs uppercase tracking-widest text-muted-foreground mb-1 font-semibold block">
                       Type
@@ -158,26 +182,86 @@ export default function CreateTournament() {
                       <option value="Knockout">Knockout</option>
                     </select>
                   </div>
-                </div>
-                <div>
-                  <label className="text-xs uppercase tracking-widest text-muted-foreground mb-1 font-semibold block">
-                    Venue / Location
-                  </label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1.5 text-muted-foreground material-symbols-outlined text-[18px]">
-                      location_on
-                    </span>
-                    <input
-                      required
-                      name="location"
-                      value={formData.location}
+                  <div>
+                    <label className="text-xs uppercase tracking-widest text-muted-foreground mb-1 font-semibold block">
+                      Format
+                    </label>
+                    <select
+                      name="formatType"
+                      value={formData.formatType}
                       onChange={handleChange}
-                      className="w-full bg-background border border-border rounded-sm text-foreground py-1.5 pl-9 pr-3 text-sm focus:border-accent focus:ring-1 focus:ring-accent"
-                      placeholder="Online / City"
-                      type="text"
-                    />
+                      className="w-full bg-background border border-border rounded-sm text-foreground py-1.5 px-3 text-sm focus:border-accent focus:ring-1 focus:ring-accent appearance-none"
+                    >
+                      <option value="Blitz">Blitz</option>
+                      <option value="Rapid">Rapid</option>
+                      <option value="Classical">Classical</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-xs uppercase tracking-widest text-muted-foreground mb-1 font-semibold block">
+                      Players
+                    </label>
+                    <select
+                      name="tournamentType"
+                      value={formData.tournamentType}
+                      onChange={handleChange}
+                      className="w-full bg-background border border-border rounded-sm text-foreground py-1.5 px-3 text-sm focus:border-accent focus:ring-1 focus:ring-accent appearance-none"
+                    >
+                      <option value="Solo">Solo</option>
+                      <option value="Team" disabled>
+                        Team (Coming Soon)
+                      </option>
+                    </select>
                   </div>
                 </div>
+
+                <div>
+                  <label className="text-xs uppercase tracking-widest text-muted-foreground mb-2 font-semibold block">
+                    Venue / Location
+                  </label>
+                  <div className="flex gap-4 mb-3">
+                    <label className="flex items-center gap-2 cursor-pointer text-sm text-foreground">
+                      <input
+                        type="radio"
+                        name="venueType"
+                        value="Online"
+                        checked={formData.venueType === "Online"}
+                        onChange={handleChange}
+                        className="text-accent bg-transparent border-muted-foreground focus:ring-0"
+                      />
+                      Online
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer text-sm text-foreground">
+                      <input
+                        type="radio"
+                        name="venueType"
+                        value="Offline"
+                        checked={formData.venueType === "Offline"}
+                        onChange={handleChange}
+                        className="text-accent bg-transparent border-muted-foreground focus:ring-0"
+                      />
+                      Offline
+                    </label>
+                  </div>
+
+                  {formData.venueType === "Offline" && (
+                    <div className="relative animate-in fade-in slide-in-from-top-1 duration-200">
+                      <span className="absolute left-3 top-1.5 text-muted-foreground material-symbols-outlined text-[18px]">
+                        location_on
+                      </span>
+                      <input
+                        required
+                        name="location"
+                        value={formData.location}
+                        onChange={handleChange}
+                        className="w-full bg-background border border-border rounded-sm text-foreground py-1.5 pl-9 pr-3 text-sm focus:border-accent focus:ring-1 focus:ring-accent"
+                        placeholder="City, Country or Venue Name"
+                        type="text"
+                      />
+                    </div>
+                  )}
+                </div>
+
                 <div>
                   <label className="text-xs uppercase tracking-widest text-muted-foreground mb-1 font-semibold block">
                     Description (Markdown)
@@ -419,14 +503,15 @@ export default function CreateTournament() {
       </div>
 
       {/* Sticky Bottom Action Bar */}
-      <footer className="fixed bottom-0 left-0 lg:left-64 right-0 bg-background/95 backdrop-blur-md border-t border-border p-4 z-50 shadow-[0_-4px_20px_rgba(0,0,0,0.4)] flex justify-between items-center px-8">
+      <footer className="mt-8 w-full bg-background border-t border-border p-4 md:px-8 flex justify-between items-center z-10">
         <div className="flex items-center gap-6">
           <div className="hidden md:flex flex-col">
             <span className="text-xs text-muted-foreground uppercase tracking-widest font-bold">
               Format
             </span>
             <span className="text-foreground font-mono font-medium">
-              {formData.format} • {formData.totalRounds} Rounds
+              {formData.format} • {formData.formatType} • {formData.totalRounds}{" "}
+              Rounds
             </span>
           </div>
         </div>

@@ -22,15 +22,8 @@ export const getProfile = async (req: Request, res: Response) => {
 
 export const updateProfile = async (req: Request, res: Response) => {
   try {
-    const {
-      firstName,
-      lastName,
-      bio,
-      country,
-      chesscomUsername,
-      fideId,
-
-    } = req.body;
+    const { firstName, lastName, bio, country, chesscomUsername, fideId } =
+      req.body;
 
     const updatedUser = await User.findByIdAndUpdate(
       (req as any).user.id,
@@ -79,5 +72,23 @@ export const getPublicProfile = async (req: Request, res: Response) => {
   } catch (error) {
     console.error("Get Public Profile Error:", error);
     res.status(500).json({ message: "Server error fetching player" });
+  }
+};
+
+export const searchUsers = async (req: Request, res: Response) => {
+  try {
+    const { q } = req.query;
+    if (!q || typeof q !== "string") return res.status(200).json([]);
+
+    const users = await User.find({
+      username: { $regex: q, $options: "i" },
+    })
+      .select("_id username firstName lastName")
+      .limit(5);
+
+    res.status(200).json(users);
+  } catch (error) {
+    console.error("Search Users Error:", error);
+    res.status(500).json({ message: "Server error searching users" });
   }
 };
