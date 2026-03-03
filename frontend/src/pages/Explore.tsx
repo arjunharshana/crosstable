@@ -54,7 +54,6 @@ export default function Explore() {
     );
   });
 
-  // Pull the first tournament to be the Featured Hero, and map the rest to the grid
   const featured =
     filteredTournaments.length > 0 ? filteredTournaments[0] : null;
   const gridTournaments =

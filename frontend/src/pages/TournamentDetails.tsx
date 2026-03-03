@@ -63,6 +63,9 @@ export default function TournamentDetails() {
   const { user } = useAuth();
 
   const isOrganizer = user?._id === tournament?.organizer._id;
+  const isRegistered = tournament?.participants.some(
+    (p) => p.user?._id === user?._id,
+  );
   // Fetch the tournament data
   useEffect(() => {
     const fetchTournament = async () => {
@@ -83,6 +86,23 @@ export default function TournamentDetails() {
     };
     if (id) fetchTournament();
   }, [id]);
+
+  const handleJoinTournament = async () => {
+    try {
+      await api.post(`/tournaments/${id}/join`);
+      const response = await api.get(`/tournaments/${id}`);
+      setTournament(response.data);
+    } catch (err) {
+      const axiosError = err as AxiosError<{ message: string }>;
+      const errorMessage =
+        axiosError.response?.data?.message || "Failed to join tournament.";
+
+      console.error("Join Tournament Error:", errorMessage);
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Handle removing a player
   const handleRemovePlayer = async (participantId: string) => {
@@ -222,11 +242,9 @@ export default function TournamentDetails() {
             </div>
           </div>
         </div>
-
         <div className="flex items-center gap-3">
           {isOrganizer ? (
             <>
-              {/* New Delete Button */}
               <button
                 onClick={handleDeleteTournament}
                 className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-red-500/30 text-red-500 hover:bg-red-500/10 hover:border-red-500/50 transition-all font-bold text-sm tracking-wide group"
@@ -246,17 +264,25 @@ export default function TournamentDetails() {
                 EDIT
               </Link>
               <button
-                disabled={tournament.status !== "Upcoming"}
+                disabled={tournament?.status !== "Upcoming"}
                 className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-accent text-[#0B1120] hover:brightness-110 transition-all font-black text-sm tracking-widest shadow-[0_0_15px_rgba(197,160,89,0.2)] disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <span className="material-symbols-outlined">play_arrow</span>
                 START ROUND 1
               </button>
             </>
+          ) : isRegistered ? (
+            <button
+              disabled
+              className="flex items-center gap-2 px-8 py-2.5 rounded-xl border border-accent/30 text-accent bg-accent/5 font-black text-sm tracking-widest cursor-not-allowed opacity-80"
+            >
+              <span className="material-symbols-outlined">check_circle</span>
+              REGISTERED
+            </button>
           ) : (
             <button
-              onClick={() => alert("Join logic goes here!")}
-              disabled={tournament.status !== "Upcoming"}
+              onClick={handleJoinTournament}
+              disabled={tournament?.status !== "Upcoming"}
               className="flex items-center gap-2 px-8 py-2.5 rounded-xl bg-accent text-[#0B1120] hover:brightness-110 transition-all font-black text-sm tracking-widest shadow-[0_0_15px_rgba(197,160,89,0.2)] disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <span className="material-symbols-outlined">sports_esports</span>
@@ -345,7 +371,6 @@ export default function TournamentDetails() {
             </div>
 
             {/* Organizer Card */}
-            {/* Organizers / Arbiters Card */}
             <div className="bg-card border border-border rounded-2xl p-6 shadow-[inset_0_0_20px_rgba(0,0,0,0.2)]">
               <div className="flex justify-between items-center mb-6">
                 <h3 className="text-xs font-black tracking-[0.3em] uppercase text-muted-foreground">

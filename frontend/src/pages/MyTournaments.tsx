@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import api from "../services/api";
 import { useAuth } from "../hooks/useAuth";
 
-// 1. Strict Interfaces to fix the "type 'never'" TypeScript error!
 interface Participant {
   user?: { _id: string; username?: string } | string;
   isGuest: boolean;
@@ -30,11 +29,14 @@ interface Tournament {
         lastName: string;
       }
     | string;
+  arbiters?:
+    | { _id: string; username: string; firstName: string; lastName: string }[]
+    | string[];
 }
 
 export default function MyTournaments() {
   const navigate = useNavigate();
-  const { user } = useAuth(); // Grab the logged-in user
+  const { user } = useAuth();
 
   const [activeTab, setActiveTab] = useState<
     "organizing" | "playing" | "history"
@@ -42,7 +44,6 @@ export default function MyTournaments() {
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Fetch real data on load
   useEffect(() => {
     const fetchMyTournaments = async () => {
       try {
@@ -57,15 +58,23 @@ export default function MyTournaments() {
     fetchMyTournaments();
   }, []);
 
-  // Ensure we have a valid user ID (handles both user.id and user._id)
   const currentUserId = user?._id;
 
-  // Helper functions to safely check IDs (since mongoose sometimes returns objects vs strings)
   const isOrganizer = (t: Tournament) => {
-    if (!t.organizer) return false;
-    const orgId =
-      typeof t.organizer === "string" ? t.organizer : t.organizer._id;
-    return orgId === currentUserId;
+    if (t.organizer) {
+      const orgId =
+        typeof t.organizer === "string" ? t.organizer : t.organizer._id;
+      if (orgId === currentUserId) return true;
+    }
+
+    if (t.arbiters && t.arbiters.length > 0) {
+      return t.arbiters.some((arbiter) => {
+        const arbId = typeof arbiter === "string" ? arbiter : arbiter._id;
+        return arbId === currentUserId;
+      });
+    }
+
+    return false;
   };
 
   const isPlayer = (t: Tournament) => {
@@ -77,7 +86,6 @@ export default function MyTournaments() {
     });
   };
 
-  // 2. Filter into our three buckets!
   const myOrganizing = tournaments.filter(
     (t) => isOrganizer(t) && t.status !== "Completed",
   );
@@ -88,12 +96,10 @@ export default function MyTournaments() {
     (t) => (isOrganizer(t) || isPlayer(t)) && t.status === "Completed",
   );
 
-  // 3. Map Raw DB Data -> Beautiful UI Props
   const mapToTicketInfo = (
     t: Tournament,
     role: "organizing" | "playing" | "history",
   ) => {
-    // Format the date safely
     const dateObj = t.startDate ? new Date(t.startDate) : new Date();
     const dateMonth = dateObj
       .toLocaleDateString("en-US", { month: "short" })
@@ -119,7 +125,7 @@ export default function MyTournaments() {
       statusBg = "bg-[#10B981]/10";
       statusBorder = "border-[#10B981]/20";
       progressColor = "bg-accent";
-      progressPercent = "w-[50%]"; // Shows half-full progress bar
+      progressPercent = "w-[50%]";
       icon = "bolt";
     } else if (t.status === "Completed") {
       statusColor = "text-muted-foreground";
@@ -252,7 +258,7 @@ export default function MyTournaments() {
         </button>
       </div>
 
-      {/* Stats Row (Only show if Organizing) */}
+      {/* Stats Row */}
       {activeTab === "organizing" && (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6 mb-10 animate-in slide-in-from-bottom-4 duration-300">
           <div className="bg-card/50 border border-border p-4 rounded-md flex items-center justify-between">
