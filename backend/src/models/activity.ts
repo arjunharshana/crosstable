@@ -32,6 +32,11 @@ const ActivitySchema = new Schema<IActivity>(
       type: String,
       required: true,
     },
+    createdAt: {
+      type: Date,
+      default: Date.now,
+      expires: "7d",
+    },
   },
   { timestamps: true },
 );
@@ -52,6 +57,7 @@ const NotificationSchema = new Schema<INotification>(
     message: { type: String, required: true },
     isRead: { type: Boolean, default: false },
     relatedTournament: { type: Schema.Types.ObjectId, ref: "Tournament" },
+    createdAt: { type: Date, default: Date.now, expires: "3d" },
   },
   { timestamps: true },
 );

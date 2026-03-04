@@ -6,6 +6,7 @@ import AddPlayerModal from "../components/AddPlayer";
 import AddArbiterModal from "../components/AddArbiter";
 import { Link } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
+import { ConfirmDialog } from "../components/ConfirmDialog";
 
 interface Participant {
   _id: string;
@@ -60,12 +61,21 @@ export default function TournamentDetails() {
   const [isAddPlayerModalOpen, setIsAddPlayerModalOpen] = useState(false);
   const [isArbiterModalOpen, setIsArbiterModalOpen] = useState(false);
 
+  const [confirmState, setConfirmState] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+    action: () => {},
+    confirmText: "Confirm",
+  });
+
   const { user } = useAuth();
 
   const isOrganizer = user?._id === tournament?.organizer._id;
   const isRegistered = tournament?.participants.some(
     (p) => p.user?._id === user?._id,
   );
+
   // Fetch the tournament data
   useEffect(() => {
     const fetchTournament = async () => {
@@ -104,75 +114,92 @@ export default function TournamentDetails() {
     }
   };
 
-  // Handle removing a player
-  const handleRemovePlayer = async (participantId: string) => {
-    if (!window.confirm("Are you sure you want to remove this player?")) return;
-    try {
-      await api.delete(`/tournaments/${id}/remove-player/${participantId}`);
-      setTournament((prev) =>
-        prev
-          ? {
-              ...prev,
-              participants: prev.participants.filter(
-                (p) => p._id !== participantId,
-              ),
-            }
-          : prev,
-      );
-    } catch (err) {
-      const axiosError = err as AxiosError<{ message: string }>;
-      const errorMessage =
-        axiosError.response?.data?.message || "Failed to remove player.";
+  // --- UPGRADED: Handle removing a player with custom modal ---
+  const handleRemovePlayer = (participantId: string) => {
+    setConfirmState({
+      isOpen: true,
+      title: "Remove Player?",
+      message: "Are you sure you want to remove this player?",
+      confirmText: "Remove Player",
+      action: async () => {
+        try {
+          await api.delete(`/tournaments/${id}/remove-player/${participantId}`);
+          setTournament((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  participants: prev.participants.filter(
+                    (p) => p._id !== participantId,
+                  ),
+                }
+              : prev,
+          );
+        } catch (err) {
+          const axiosError = err as AxiosError<{ message: string }>;
+          const errorMessage =
+            axiosError.response?.data?.message || "Failed to remove player.";
 
-      console.error("Remove Player Error:", errorMessage);
-      alert(errorMessage);
-    }
+          console.error("Remove Player Error:", errorMessage);
+          alert(errorMessage);
+        }
+      },
+    });
   };
 
-  // Handle removing a Deputy Arbiter
-  const handleRemoveArbiter = async (arbiterId: string) => {
-    if (!window.confirm("Are you sure you want to remove this arbiter?"))
-      return;
-    try {
-      await api.delete(`/tournaments/${id}/remove-arbiter/${arbiterId}`);
-      setTournament((prev) =>
-        prev
-          ? {
-              ...prev,
-              arbiters: prev.arbiters?.filter((a) => a._id !== arbiterId),
-            }
-          : prev,
-      );
-    } catch (err) {
-      const axiosError = err as AxiosError<{ message: string }>;
-      const errorMessage =
-        axiosError.response?.data?.message || "Failed to remove arbiter.";
+  // --- UPGRADED: Handle removing a Deputy Arbiter with custom modal ---
+  const handleRemoveArbiter = (arbiterId: string) => {
+    setConfirmState({
+      isOpen: true,
+      title: "Remove Arbiter?",
+      message:
+        "Are you sure you want to revoke this user's Arbiter privileges?",
+      confirmText: "Remove Arbiter",
+      action: async () => {
+        try {
+          await api.delete(`/tournaments/${id}/remove-arbiter/${arbiterId}`);
+          setTournament((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  arbiters: prev.arbiters?.filter((a) => a._id !== arbiterId),
+                }
+              : prev,
+          );
+        } catch (err) {
+          const axiosError = err as AxiosError<{ message: string }>;
+          const errorMessage =
+            axiosError.response?.data?.message || "Failed to remove arbiter.";
 
-      console.error("Remove Arbiter Error:", errorMessage);
-      alert(errorMessage);
-    }
+          console.error("Remove Arbiter Error:", errorMessage);
+          alert(errorMessage);
+        }
+      },
+    });
   };
-  const handleDeleteTournament = async () => {
-    if (
-      !window.confirm(
-        "WARNING: Are you sure you want to completely delete this tournament? This action cannot be undone.",
-      )
-    ) {
-      return;
-    }
 
-    try {
-      await api.delete(`/tournaments/${id}`);
-      // Send them back to the main dashboard after successful deletion
-      navigate("/dashboard");
-    } catch (err) {
-      const axiosError = err as AxiosError<{ message: string }>;
-      const errorMessage =
-        axiosError.response?.data?.message || "Failed to delete tournament.";
+  // --- UPGRADED: Handle deleting tournament with custom modal ---
+  const handleDeleteTournament = () => {
+    setConfirmState({
+      isOpen: true,
+      title: "Delete Tournament?",
+      message:
+        "WARNING: Are you sure you want to completely delete this tournament? All pairings, matches, and data will be permanently lost.",
+      confirmText: "Yes, Delete It",
+      action: async () => {
+        try {
+          await api.delete(`/tournaments/${id}`);
+          navigate("/dashboard");
+        } catch (err) {
+          const axiosError = err as AxiosError<{ message: string }>;
+          const errorMessage =
+            axiosError.response?.data?.message ||
+            "Failed to delete tournament.";
 
-      console.error("Delete Tournament Error:", errorMessage);
-      alert(errorMessage);
-    }
+          console.error("Delete Tournament Error:", errorMessage);
+          alert(errorMessage);
+        }
+      },
+    });
   };
 
   if (loading)
@@ -585,6 +612,8 @@ export default function TournamentDetails() {
           </div>
         </div>
       </div>
+
+      {/* Modals */}
       <AddPlayerModal
         isOpen={isAddPlayerModalOpen}
         onClose={() => setIsAddPlayerModalOpen(false)}
@@ -600,6 +629,17 @@ export default function TournamentDetails() {
         onSuccess={() => {
           api.get(`/tournaments/${id}`).then((res) => setTournament(res.data));
         }}
+      />
+
+      {/* NEW: Global Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={confirmState.isOpen}
+        onClose={() => setConfirmState((prev) => ({ ...prev, isOpen: false }))}
+        onConfirm={confirmState.action}
+        title={confirmState.title}
+        message={confirmState.message}
+        confirmText={confirmState.confirmText}
+        isDestructive={true}
       />
     </div>
   );
