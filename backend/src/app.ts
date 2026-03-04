@@ -5,6 +5,7 @@ import authRoutes from "./routes/authRoutes";
 import helmet from "helmet";
 import userRoutes from "./routes/userRoutes";
 import tournamentRoutes from "./routes/tournamentRoutes";
+import activityRoutes from "./routes/activityRoutes";
 
 const app: Application = express();
 
@@ -17,7 +18,7 @@ app.use(
   cors({
     origin: process.env.CLIENT_URL || "http://localhost:5173", // Frontend URL
     credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE"],
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
   }),
 );
 
@@ -25,6 +26,7 @@ app.use(
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/tournaments", tournamentRoutes);
+app.use("/api/activity", activityRoutes);
 app.get("/", (req: Request, res: Response) => {
   res.send("CrossTable API is running...");
 });

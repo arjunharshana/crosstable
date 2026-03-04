@@ -211,7 +211,7 @@ export default function MyTournaments() {
           </p>
         </div>
         <button
-          onClick={() => navigate("/tournaments/new")}
+          onClick={() => navigate("/create-tournament")}
           className="bg-accent hover:bg-accent/90 text-[#0B1120] font-bold py-2.5 px-6 rounded-md flex items-center justify-center gap-2 transition-all shadow-[0_0_15px_rgba(197,160,89,0.15)] group w-full sm:w-auto transform hover:-translate-y-0.5"
         >
           <span className="material-symbols-outlined text-xl group-hover:rotate-90 transition-transform">
@@ -441,7 +441,7 @@ export default function MyTournaments() {
         {/* Add New Ticket Card (Only in Organizing View) */}
         {activeTab === "organizing" && (
           <button
-            onClick={() => navigate("/tournaments/new")}
+            onClick={() => navigate("/create-tournament")}
             className="relative group text-left min-h-[340px] drop-shadow-sm hover:drop-shadow-md transition-all"
           >
             <div className="h-full flex flex-col rounded-md overflow-hidden bg-card/20 hover:bg-card/40 border-2 border-dashed border-border hover:border-accent/50 transition-all duration-300">

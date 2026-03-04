@@ -153,7 +153,7 @@ export default function Explore() {
             </span>
           </button>
           <button
-            onClick={() => navigate("/tournaments/new")}
+            onClick={() => navigate("/create-tournament")}
             className="bg-accent hover:bg-accent/90 text-[#0B1120] font-bold py-2 px-4 rounded-md flex items-center justify-center gap-2 transition-all shadow-sm w-full md:w-auto whitespace-nowrap text-sm"
           >
             <span className="material-symbols-outlined text-[18px]">add</span>

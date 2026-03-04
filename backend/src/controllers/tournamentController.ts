@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import Tournament from "../models/tournament";
+import { Activity, Notification } from "../models/activity";
 
 export const createTournament = async (req: Request, res: Response) => {
   try {
@@ -30,6 +31,12 @@ export const createTournament = async (req: Request, res: Response) => {
     });
 
     await tournament.save();
+    await Activity.create({
+      type: "TOURNAMENT_CREATED",
+      user: tournament.organizer,
+      tournament: tournament._id,
+      message: `Created a new Tournament: ${tournament.name}`,
+    });
     res.status(201).json(tournament);
   } catch (err) {
     console.error("Create Tournament Error:", err);
@@ -156,6 +163,20 @@ export const joinTournament = async (req: Request, res: Response) => {
 
     await tournament.save();
 
+    await Activity.create({
+      type: "PLAYER_JOINED",
+      user: userId,
+      tournament: tournament._id,
+      message: `Registered for ${tournament.name}`,
+    });
+
+    await Notification.create({
+      recipient: tournament.organizer,
+      type: "TOURNAMENT_UPDATE",
+      relatedTournament: tournament._id,
+      message: `A new player has registered for ${tournament.name}`,
+    });
+
     res
       .status(200)
       .json({ message: "Successfully joined the tournament!", tournament });
@@ -222,6 +243,15 @@ export const addPlayerManually = async (req: Request, res: Response) => {
     }
 
     await tournament.save();
+
+    if (!isGuest) {
+      await Notification.create({
+        recipient: userId,
+        type: "TOURNAMENT_UPDATE",
+        relatedTournament: tournament._id,
+        message: `You have been added to ${tournament.name} by the organizer.`,
+      });
+    }
     res.status(200).json({ message: "Player added successfully", tournament });
   } catch (error) {
     console.error("Error adding player manually:", error);
@@ -253,11 +283,28 @@ export const removePlayerManually = async (req: Request, res: Response) => {
       });
     }
 
+    const participantToRemove = tournament.participants.find(
+      (p: any) => p._id.toString() === participantId,
+    );
+
     const updatedTournament = await Tournament.findOneAndUpdate(
       { _id: tournamentId, organizer: organizerId },
       { $pull: { participants: { _id: participantId } } },
       { new: true },
     );
+
+    if (
+      participantToRemove &&
+      !participantToRemove.isGuest &&
+      participantToRemove.user
+    ) {
+      await Notification.create({
+        recipient: participantToRemove.user,
+        type: "ROLE_UPDATE",
+        relatedTournament: tournament._id,
+        message: `You have been removed from ${tournament.name}.`,
+      });
+    }
 
     res.status(200).json({
       message: "Player removed successfully",
@@ -293,6 +340,13 @@ export const addArbiter = async (req: Request, res: Response) => {
 
     tournament.arbiters.push(userId);
     await tournament.save();
+
+    await Notification.create({
+      recipient: userId,
+      type: "ROLE_UPDATE",
+      relatedTournament: tournament._id,
+      message: `You have been promoted to Deputy Arbiter for ${tournament.name}. You now have access to the Arbiter Panel.`,
+    });
     res.status(200).json({ message: "Arbiter added", tournament });
   } catch (error) {
     res.status(500).json({ message: "Server error" });
@@ -314,6 +368,13 @@ export const removeArbiter = async (req: Request, res: Response) => {
         .status(404)
         .json({ message: "Tournament not found or unauthorized" });
     }
+
+    await Notification.create({
+      recipient: arbiterId,
+      type: "ROLE_UPDATE",
+      relatedTournament: tournament._id,
+      message: `You have been removed as an arbiter for ${tournament.name}.`,
+    });
 
     res
       .status(200)
