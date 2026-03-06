@@ -4,9 +4,9 @@ export interface IMatch extends Document {
   tournament: mongoose.Types.ObjectId;
   round: number;
   board: number;
-  whitePlayer: mongoose.Types.ObjectId;
-  blackPlayer: mongoose.Types.ObjectId;
-  result: "1-0" | "0-1" | "1/2-1/2" | "*";
+  whitePlayer: mongoose.Types.ObjectId; // References the Participant _id
+  blackPlayer?: mongoose.Types.ObjectId | null; // Optional for BYEs
+  result: "1-0" | "0-1" | "1/2-1/2" | "*" | "BYE"; // Added BYE
   pgn: string;
 }
 
@@ -19,14 +19,16 @@ const MatchSchema: Schema = new Schema(
     },
     round: { type: Number, required: true },
     board: { type: Number, required: true },
-    whitePlayer: { type: Schema.Types.ObjectId, ref: "User", required: true },
-    blackPlayer: { type: Schema.Types.ObjectId, ref: "User", default: null },
+
+    whitePlayer: { type: Schema.Types.ObjectId, required: true },
+    blackPlayer: { type: Schema.Types.ObjectId, default: null },
+
     result: {
       type: String,
-      enum: ["1-0", "0-1", "1/2-1/2", "*"],
+      enum: ["1-0", "0-1", "1/2-1/2", "*", "BYE"],
       default: "*",
     },
-    pgn: { type: String, trim: true },
+    pgn: { type: String, trim: true, default: "" },
   },
   { timestamps: true },
 );
