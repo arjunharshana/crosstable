@@ -60,7 +60,10 @@ const updateHistory = (
 };
 
 // Main Engine
-export const generateRoundRobinPairings = (participants: string[]) => {
+export const generateRoundRobinPairings = (
+  participants: string[],
+  isDouble: boolean,
+) => {
   let players = [...participants].sort(() => Math.random() - 0.5);
 
   if (players.length % 2 !== 0) {
@@ -114,6 +117,18 @@ export const generateRoundRobinPairings = (participants: string[]) => {
     if (lastPlayer) {
       players.splice(1, 0, lastPlayer);
     }
+  }
+
+  if (isDouble) {
+    const secondHalfMatches = matches.map((m) => ({
+      round: m.round + totalRounds,
+      boardNumber: m.boardNumber,
+      white: m.black,
+      black: m.white,
+      isBye: m.isBye,
+    }));
+
+    matches.push(...secondHalfMatches);
   }
 
   return matches;

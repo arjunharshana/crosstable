@@ -15,7 +15,7 @@ export interface ITournament extends Document {
   description: string;
   organizer: mongoose.Types.ObjectId;
   arbiters: [{ type: mongoose.Schema.Types.ObjectId; ref: "User" }];
-  format: "Swiss" | "Round Robin" | "Knockout";
+  format: "Swiss" | "Round Robin" | "Knockout" | "Double Round Robin";
   formatType: "Classical" | "Rapid" | "Blitz";
   timeControl: string;
   status: "Upcoming" | "Ongoing" | "Completed";
@@ -56,7 +56,7 @@ const TournamentSchema: Schema = new Schema(
     ],
     format: {
       type: String,
-      enum: ["Swiss", "Round Robin", "Knockout"],
+      enum: ["Swiss", "Round Robin", "Knockout", "Double Round Robin"],
       default: "Swiss",
     },
     formatType: {
