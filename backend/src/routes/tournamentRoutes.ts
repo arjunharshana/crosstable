@@ -12,7 +12,10 @@ import {
   removeArbiter,
 } from "../controllers/tournamentController";
 
-import { startTournament } from "../controllers/pairingController";
+import {
+  startTournament,
+  advanceKnockoutRound,
+} from "../controllers/pairingController";
 import authMiddleware from "../middleware/authMiddleware";
 
 const router = express.Router();
@@ -34,5 +37,5 @@ router.delete("/:id/remove-arbiter/:arbiterId", authMiddleware, removeArbiter);
 
 // Pairing routes
 router.post("/:id/start", authMiddleware, startTournament);
-
+router.post("/:id/advance", authMiddleware, advanceKnockoutRound);
 export default router;
