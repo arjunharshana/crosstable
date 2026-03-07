@@ -7,8 +7,10 @@ import AddArbiterModal from "../components/AddArbiter";
 import { Link } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { ConfirmDialog } from "../components/ConfirmDialog";
+import { TournamentPanel } from "../components/TournamentPanel"; // NEW IMPORT
 
-interface Participant {
+// --- INTERFACES ---
+export interface Participant {
   _id: string;
   isGuest: boolean;
   guestName?: string;
@@ -24,7 +26,7 @@ interface Participant {
   score: number;
 }
 
-interface Tournament {
+export interface Tournament {
   _id: string;
   name: string;
   status: "Upcoming" | "Ongoing" | "Completed";
@@ -51,11 +53,24 @@ interface Tournament {
   participants: Participant[];
 }
 
+// NEW: Match Interface
+export interface MatchData {
+  _id: string;
+  tournament: string;
+  round: number;
+  board: number;
+  whitePlayer: string;
+  blackPlayer: string | null;
+  result: "1-0" | "0-1" | "1/2-1/2" | "*" | "BYE";
+  pgn?: string;
+}
+
 export default function TournamentDetails() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
   const [tournament, setTournament] = useState<Tournament | null>(null);
+  const [matches, setMatches] = useState<MatchData[]>([]); // NEW STATE
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [isAddPlayerModalOpen, setIsAddPlayerModalOpen] = useState(false);
@@ -72,30 +87,74 @@ export default function TournamentDetails() {
   const { user } = useAuth();
 
   const isOrganizer = user?._id === tournament?.organizer._id;
+  // If the user is an arbiter, they get arbiter privileges!
+  const isArbiter = tournament?.arbiters?.some((a) => a._id === user?._id);
   const isRegistered = tournament?.participants.some(
     (p) => p.user?._id === user?._id,
   );
 
-  // Fetch the tournament data
+  // NEW: Calculate current round
+  const currentRound =
+    matches.length > 0 ? Math.max(...matches.map((m) => m.round)) : 1;
+
+  // UPGRADED: Fetch both tournament AND matches
   useEffect(() => {
-    const fetchTournament = async () => {
+    const fetchData = async () => {
       try {
-        const response = await api.get(`/tournaments/${id}`);
-        setTournament(response.data);
+        const [tournRes, matchRes] = await Promise.all([
+          api.get(`/tournaments/${id}`),
+          api.get(`/tournaments/${id}/matches`),
+        ]);
+        setTournament(tournRes.data);
+        setMatches(matchRes.data);
       } catch (err) {
         const axiosError = err as AxiosError<{ message: string }>;
         const errorMessage =
-          axiosError.response?.data?.message ||
-          "Failed to fetch tournament details.";
-
-        console.error("Fetch Tournament Error:", errorMessage);
+          axiosError.response?.data?.message || "Failed to fetch details.";
+        console.error("Fetch Error:", errorMessage);
         setError(errorMessage);
       } finally {
         setLoading(false);
       }
     };
-    if (id) fetchTournament();
+    if (id) fetchData();
   }, [id]);
+
+  const handleStartTournament = async () => {
+    try {
+      await api.post(`/tournaments/${id}/start`);
+      const [tournRes, matchRes] = await Promise.all([
+        api.get(`/tournaments/${id}`),
+        api.get(`/tournaments/${id}/matches`),
+      ]);
+      setTournament(tournRes.data);
+      setMatches(matchRes.data);
+    } catch (err) {
+      const axiosError = err as AxiosError<{ message: string }>;
+      alert(
+        axiosError.response?.data?.message || "Failed to start tournament.",
+      );
+    }
+  };
+
+  const handleAdvanceRound = async () => {
+    try {
+      await api.post(`/tournaments/${id}/advance`);
+      // Refresh to grab the new rounds
+      const [tournRes, matchRes] = await Promise.all([
+        api.get(`/tournaments/${id}`),
+        api.get(`/tournaments/${id}/matches`),
+      ]);
+      setTournament(tournRes.data);
+      setMatches(matchRes.data);
+    } catch (err) {
+      const axiosError = err as AxiosError<{ message: string }>;
+      alert(
+        axiosError.response?.data?.message ||
+          "Failed to advance round. Check if all matches have a result!",
+      );
+    }
+  };
 
   const handleJoinTournament = async () => {
     try {
@@ -104,17 +163,10 @@ export default function TournamentDetails() {
       setTournament(response.data);
     } catch (err) {
       const axiosError = err as AxiosError<{ message: string }>;
-      const errorMessage =
-        axiosError.response?.data?.message || "Failed to join tournament.";
-
-      console.error("Join Tournament Error:", errorMessage);
-      setError(errorMessage);
-    } finally {
-      setLoading(false);
+      alert(axiosError.response?.data?.message || "Failed to join tournament.");
     }
   };
 
-  // --- UPGRADED: Handle removing a player with custom modal ---
   const handleRemovePlayer = (participantId: string) => {
     setConfirmState({
       isOpen: true,
@@ -134,19 +186,13 @@ export default function TournamentDetails() {
                 }
               : prev,
           );
-        } catch (err) {
-          const axiosError = err as AxiosError<{ message: string }>;
-          const errorMessage =
-            axiosError.response?.data?.message || "Failed to remove player.";
-
-          console.error("Remove Player Error:", errorMessage);
-          alert(errorMessage);
+        } catch {
+          alert("Failed to remove player.");
         }
       },
     });
   };
 
-  // --- UPGRADED: Handle removing a Deputy Arbiter with custom modal ---
   const handleRemoveArbiter = (arbiterId: string) => {
     setConfirmState({
       isOpen: true,
@@ -165,19 +211,13 @@ export default function TournamentDetails() {
                 }
               : prev,
           );
-        } catch (err) {
-          const axiosError = err as AxiosError<{ message: string }>;
-          const errorMessage =
-            axiosError.response?.data?.message || "Failed to remove arbiter.";
-
-          console.error("Remove Arbiter Error:", errorMessage);
-          alert(errorMessage);
+        } catch {
+          alert("Failed to remove arbiter.");
         }
       },
     });
   };
 
-  // --- UPGRADED: Handle deleting tournament with custom modal ---
   const handleDeleteTournament = () => {
     setConfirmState({
       isOpen: true,
@@ -189,14 +229,8 @@ export default function TournamentDetails() {
         try {
           await api.delete(`/tournaments/${id}`);
           navigate("/dashboard");
-        } catch (err) {
-          const axiosError = err as AxiosError<{ message: string }>;
-          const errorMessage =
-            axiosError.response?.data?.message ||
-            "Failed to delete tournament.";
-
-          console.error("Delete Tournament Error:", errorMessage);
-          alert(errorMessage);
+        } catch {
+          alert("Failed to delete tournament.");
         }
       },
     });
@@ -246,6 +280,19 @@ export default function TournamentDetails() {
             </span>
           </div>
           <div className="flex items-center gap-4 text-muted-foreground">
+            {tournament.status === "Ongoing" && (
+              <>
+                <div className="flex items-center gap-1.5 text-accent">
+                  <span className="material-symbols-outlined text-sm">
+                    flag
+                  </span>
+                  <span className="text-xs font-bold uppercase tracking-wider">
+                    Round {currentRound} of {tournament.totalRounds}
+                  </span>
+                </div>
+                <span className="w-1 h-1 bg-border rounded-full"></span>
+              </>
+            )}
             <div className="flex items-center gap-1.5">
               <span className="material-symbols-outlined text-sm">
                 calendar_month
@@ -269,34 +316,58 @@ export default function TournamentDetails() {
             </div>
           </div>
         </div>
+
         <div className="flex items-center gap-3">
-          {isOrganizer ? (
+          {isOrganizer || isArbiter ? (
             <>
-              <button
-                onClick={handleDeleteTournament}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-red-500/30 text-red-500 hover:bg-red-500/10 hover:border-red-500/50 transition-all font-bold text-sm tracking-wide group"
-              >
-                <span className="material-symbols-outlined text-[20px] group-hover:scale-110 transition-transform">
-                  delete_forever
-                </span>
-                <span className="hidden md:block">DELETE</span>
-              </button>
-              <Link
-                to={`/tournaments/${id}/edit`}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-border text-foreground hover:bg-card transition-all font-bold text-sm tracking-wide"
-              >
-                <span className="material-symbols-outlined text-[20px]">
-                  tune
-                </span>
-                EDIT
-              </Link>
-              <button
-                disabled={tournament?.status !== "Upcoming"}
-                className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-accent text-[#0B1120] hover:brightness-110 transition-all font-black text-sm tracking-widest shadow-[0_0_15px_rgba(197,160,89,0.2)] disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <span className="material-symbols-outlined">play_arrow</span>
-                START ROUND 1
-              </button>
+              {isOrganizer && (
+                <>
+                  <button
+                    onClick={handleDeleteTournament}
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-red-500/30 text-red-500 hover:bg-red-500/10 hover:border-red-500/50 transition-all font-bold text-sm tracking-wide group"
+                  >
+                    <span className="material-symbols-outlined text-[20px] group-hover:scale-110 transition-transform">
+                      delete_forever
+                    </span>
+                    <span className="hidden md:block">DELETE</span>
+                  </button>
+
+                  <Link
+                    to={`/tournaments/${id}/edit`}
+                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-border text-foreground hover:bg-card transition-all font-bold text-sm tracking-wide"
+                  >
+                    <span className="material-symbols-outlined text-[20px]">
+                      tune
+                    </span>
+                    EDIT
+                  </Link>
+                </>
+              )}
+
+              {tournament.status === "Upcoming" && (
+                <button
+                  onClick={handleStartTournament}
+                  disabled={tournament.participants.length < 2}
+                  className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-accent text-[#0B1120] hover:brightness-110 transition-all font-black text-sm tracking-widest shadow-[0_0_15px_rgba(197,160,89,0.2)] disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <span className="material-symbols-outlined">play_arrow</span>
+                  START ROUND 1
+                </button>
+              )}
+
+              {/* Only show advance round for Knockouts (Round Robins generate all matches at once) */}
+              {tournament.status === "Ongoing" &&
+                tournament.format.includes("Knockout") && (
+                  <button
+                    onClick={handleAdvanceRound}
+                    className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-accent text-[#0B1120] hover:brightness-110 transition-all font-black text-sm tracking-widest shadow-[0_0_15px_rgba(197,160,89,0.2)]"
+                  >
+                    <span className="material-symbols-outlined">
+                      keyboard_double_arrow_right
+                    </span>
+                    ADVANCE ROUND
+                  </button>
+                )}
             </>
           ) : isRegistered ? (
             <button
@@ -320,6 +391,20 @@ export default function TournamentDetails() {
       </header>
 
       <div className="p-6 md:p-8">
+        {tournament.status === "Ongoing" && (
+          <div className="mb-8">
+            <h3 className="text-xl font-serif font-bold text-foreground mb-4">
+              Pairings & Results
+            </h3>
+            <TournamentPanel
+              tournament={tournament}
+              matches={matches}
+              setMatches={setMatches}
+              currentRound={currentRound}
+            />
+          </div>
+        )}
+
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Column Left: Tournament Overview */}
           <div className="col-span-1 lg:col-span-4 flex flex-col gap-6">
@@ -483,17 +568,18 @@ export default function TournamentDetails() {
                   </span>
                 </div>
 
-                {isOrganizer && (
-                  <button
-                    onClick={() => setIsAddPlayerModalOpen(true)}
-                    className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-accent/10 border border-accent/20 text-accent hover:bg-accent hover:text-[#0B1120] transition-all font-bold text-xs tracking-widest group"
-                  >
-                    <span className="material-symbols-outlined text-[18px] leading-none">
-                      person_add
-                    </span>
-                    <span className="leading-none mt-[1px]">ADD PLAYER</span>
-                  </button>
-                )}
+                {(isOrganizer || isArbiter) &&
+                  tournament.status === "Upcoming" && (
+                    <button
+                      onClick={() => setIsAddPlayerModalOpen(true)}
+                      className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-accent/10 border border-accent/20 text-accent hover:bg-accent hover:text-[#0B1120] transition-all font-bold text-xs tracking-widest group"
+                    >
+                      <span className="material-symbols-outlined text-[18px] leading-none">
+                        person_add
+                      </span>
+                      <span className="leading-none mt-[1px]">ADD PLAYER</span>
+                    </button>
+                  )}
               </div>
 
               <div className="overflow-x-auto">
@@ -534,7 +620,6 @@ export default function TournamentDetails() {
                             | "classical"
                             | "rapid"
                             | "blitz";
-                        // Extract details depending on if they are a Guest or Registered User
                         const name = p.isGuest
                           ? p.guestName
                           : `${p.user?.firstName} ${p.user?.lastName}`;
@@ -589,17 +674,19 @@ export default function TournamentDetails() {
                               </span>
                             </td>
                             <td className="px-6 py-4 text-right">
-                              {isOrganizer && (
-                                <button
-                                  onClick={() => handleRemovePlayer(p._id)}
-                                  className="p-2 text-muted-foreground hover:text-red-400 opacity-0 group-hover/row:opacity-100 transition-all focus:opacity-100"
-                                  title="Remove Player"
-                                >
-                                  <span className="material-symbols-outlined text-lg">
-                                    delete
-                                  </span>
-                                </button>
-                              )}
+                              {/* Only allow removing players before the tournament starts */}
+                              {(isOrganizer || isArbiter) &&
+                                tournament.status === "Upcoming" && (
+                                  <button
+                                    onClick={() => handleRemovePlayer(p._id)}
+                                    className="p-2 text-muted-foreground hover:text-red-400 opacity-0 group-hover/row:opacity-100 transition-all focus:opacity-100"
+                                    title="Remove Player"
+                                  >
+                                    <span className="material-symbols-outlined text-lg">
+                                      delete
+                                    </span>
+                                  </button>
+                                )}
                             </td>
                           </tr>
                         );
@@ -631,7 +718,7 @@ export default function TournamentDetails() {
         }}
       />
 
-      {/* NEW: Global Confirmation Dialog */}
+      {/* Global Confirmation Dialog */}
       <ConfirmDialog
         isOpen={confirmState.isOpen}
         onClose={() => setConfirmState((prev) => ({ ...prev, isOpen: false }))}

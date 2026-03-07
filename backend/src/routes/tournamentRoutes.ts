@@ -17,6 +17,10 @@ import {
   advanceKnockoutRound,
 } from "../controllers/pairingController";
 import authMiddleware from "../middleware/authMiddleware";
+import {
+  getTournamentMatches,
+  updateMatchResult,
+} from "../controllers/matchController";
 
 const router = express.Router();
 
@@ -38,4 +42,8 @@ router.delete("/:id/remove-arbiter/:arbiterId", authMiddleware, removeArbiter);
 // Pairing routes
 router.post("/:id/start", authMiddleware, startTournament);
 router.post("/:id/advance", authMiddleware, advanceKnockoutRound);
+
+// Match routes
+router.get("/:id/matches", authMiddleware, getTournamentMatches);
+router.put("/:id/matches/:matchId", authMiddleware, updateMatchResult);
 export default router;
