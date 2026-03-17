@@ -7,9 +7,7 @@ import AddArbiterModal from "../components/AddArbiter";
 import { Link } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { ConfirmDialog } from "../components/ConfirmDialog";
-import { TournamentPanel } from "../components/TournamentPanel"; // NEW IMPORT
-
-// --- INTERFACES ---
+import { TournamentPanel } from "../components/TournamentPanel"; 
 export interface Participant {
   _id: string;
   isGuest: boolean;
@@ -53,7 +51,6 @@ export interface Tournament {
   participants: Participant[];
 }
 
-// NEW: Match Interface
 export interface MatchData {
   _id: string;
   tournament: string;
@@ -87,17 +84,17 @@ export default function TournamentDetails() {
   const { user } = useAuth();
 
   const isOrganizer = user?._id === tournament?.organizer._id;
-  // If the user is an arbiter, they get arbiter privileges!
+ 
   const isArbiter = tournament?.arbiters?.some((a) => a._id === user?._id);
   const isRegistered = tournament?.participants.some(
     (p) => p.user?._id === user?._id,
   );
 
-  // NEW: Calculate current round
+  
   const currentRound =
     matches.length > 0 ? Math.max(...matches.map((m) => m.round)) : 1;
 
-  // UPGRADED: Fetch both tournament AND matches
+  
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -355,7 +352,7 @@ export default function TournamentDetails() {
                 </button>
               )}
 
-              {/* Only show advance round for Knockouts (Round Robins generate all matches at once) */}
+            
               {tournament.status === "Ongoing" &&
                 tournament.format.includes("Knockout") && (
                   <button
@@ -555,7 +552,7 @@ export default function TournamentDetails() {
             </div>
           </div>
 
-          {/* Column Right: Participants Management */}
+          
           <div className="col-span-1 lg:col-span-8">
             <div className="bg-card border border-border rounded-2xl flex flex-col h-full overflow-hidden shadow-[inset_0_0_20px_rgba(0,0,0,0.2)]">
               <div className="p-6 border-b border-border flex items-center justify-between">
