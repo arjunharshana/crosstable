@@ -210,37 +210,45 @@ const handleSwiss = async (tournament: any, res: Response) => {
   });
 };
 
-export const advanceKnockoutRound = async (req: Request, res: Response) => {
+export const advanceTournamentRound = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const organizerId = (req as any).user._id || (req as any).user.id;
+    const userId = (req as any).user._id || (req as any).user.id;
 
-    const tournament = await Tournament.findOne({
-      _id: id,
-      organizer: organizerId,
-    });
+    // Fetch tournament and populate user ratings for the Swiss engine
+    const tournament = await Tournament.findById(id).populate(
+      "participants.user",
+      "ratings username firstName lastName",
+    );
     if (!tournament) {
-      return res
-        .status(404)
-        .json({ message: "Tournament not found or unauthorized." });
+      return res.status(404).json({ message: "Tournament not found." });
     }
 
-    // Find the current highest round
-    const latestMatch = await Match.findOne({ tournament: id }).sort({
-      round: -1,
+    const isOrganizer = tournament.organizer.toString() === userId.toString();
+    const isArbiter = tournament.arbiters?.some(
+      (a) => a.toString() === userId.toString(),
+    );
+
+    if (!isOrganizer && !isArbiter) {
+      return res
+        .status(403)
+        .json({ message: "Unauthorized. Only Arbiters can advance rounds." });
+    }
+
+    const allMatches = await Match.find({ tournament: id }).sort({
+      round: 1,
+      board: 1,
     });
-    if (!latestMatch) {
+    if (allMatches.length === 0) {
       return res
         .status(400)
         .json({ message: "No matches found. Start the tournament first." });
     }
 
-    const currentRound = latestMatch.round;
-
-    const currentRoundMatches = await Match.find({
-      tournament: id,
-      round: currentRound,
-    }).sort({ board: 1 });
+    const currentRound = Math.max(...allMatches.map((m) => m.round));
+    const currentRoundMatches = allMatches.filter(
+      (m) => m.round === currentRound,
+    );
 
     const unfinishedMatches = currentRoundMatches.filter(
       (m) => m.result === "*",
@@ -248,17 +256,10 @@ export const advanceKnockoutRound = async (req: Request, res: Response) => {
     if (unfinishedMatches.length > 0) {
       return res
         .status(400)
-        .json({ message: "Cannot advance. All matches must be completed." });
-    }
-
-    const drawnMatches = currentRoundMatches.filter(
-      (m) => m.result === "1/2-1/2",
-    );
-    if (drawnMatches.length > 0) {
-      return res.status(400).json({
-        message:
-          "Knockout matches cannot end in a draw. Please resolve tiebreaks.",
-      });
+        .json({
+          message:
+            "Cannot advance. All matches in the current round must be completed.",
+        });
     }
 
     if (currentRound >= tournament.totalRounds) {
@@ -267,31 +268,63 @@ export const advanceKnockoutRound = async (req: Request, res: Response) => {
 
       await Activity.create({
         type: "TOURNAMENT_UPDATE",
-        user: organizerId,
+        user: userId,
         tournament: tournament._id,
         message: `${tournament.name} has concluded!`,
       });
 
       return res
         .status(200)
-        .json({ message: "Tournament completed successfully!" });
+        .json({
+          message: "Tournament completed successfully!",
+          status: "Completed",
+        });
     }
 
-    const advancingPlayers = currentRoundMatches.map((match) => {
-      if (match.result === "1-0" || match.result === "BYE") {
-        return match.whitePlayer.toString();
-      }
-      if (match.result === "0-1") {
-        return match.blackPlayer!.toString();
-      }
-      throw new Error("Invalid match result state.");
-    });
-
     const nextRoundNumber = currentRound + 1;
-    const nextRoundPairings = generateNextKnockoutRound(
-      advancingPlayers,
-      nextRoundNumber,
-    );
+    let nextRoundPairings: any[] = [];
+
+    if (tournament.format === "Knockout") {
+      const drawnMatches = currentRoundMatches.filter(
+        (m) => m.result === "1/2-1/2",
+      );
+      if (drawnMatches.length > 0) {
+        return res
+          .status(400)
+          .json({
+            message:
+              "Knockout matches cannot end in a draw. Please resolve tiebreaks first.",
+          });
+      }
+
+      const advancingPlayers = currentRoundMatches
+        .sort((a, b) => a.board - b.board)
+        .map((match) => {
+          if (match.result === "1-0" || match.result === "BYE")
+            return match.whitePlayer.toString();
+          if (match.result === "0-1") return match.blackPlayer!.toString();
+          throw new Error("Invalid knockout match state.");
+        });
+
+      nextRoundPairings = generateNextKnockoutRound(
+        advancingPlayers,
+        nextRoundNumber,
+      );
+    } else if (tournament.format === "Swiss") {
+      nextRoundPairings = generateSwissPairings(
+        tournament.participants,
+        allMatches,
+        nextRoundNumber,
+        tournament.formatType,
+      );
+    } else if (tournament.format.includes("Round Robin")) {
+      return res
+        .status(400)
+        .json({
+          message:
+            "Round Robin generates all matches at the start. You do not need to advance rounds manually.",
+        });
+    }
 
     const matchDocuments = nextRoundPairings.map((match) => ({
       tournament: tournament._id,
@@ -299,14 +332,21 @@ export const advanceKnockoutRound = async (req: Request, res: Response) => {
       board: match.boardNumber,
       whitePlayer: match.white,
       blackPlayer: match.black,
-      result: "*",
+      result: match.isBye ? "BYE" : "*",
     }));
+
+    matchDocuments.forEach((doc) => {
+      if (doc.blackPlayer === "BYE" || doc.result === "BYE") {
+        doc.blackPlayer = null as any;
+        doc.result = "BYE";
+      }
+    });
 
     await Match.insertMany(matchDocuments);
 
     await Activity.create({
       type: "TOURNAMENT_UPDATE",
-      user: organizerId,
+      user: userId,
       tournament: tournament._id,
       message: `Advanced to Round ${nextRoundNumber} of ${tournament.name}`,
     });
@@ -316,7 +356,7 @@ export const advanceKnockoutRound = async (req: Request, res: Response) => {
       matchesGenerated: matchDocuments.length,
     });
   } catch (error) {
-    console.error("Error advancing knockout round:", error);
+    console.error("Error advancing tournament round:", error);
     res.status(500).json({ message: "Server error advancing tournament." });
   }
 };
