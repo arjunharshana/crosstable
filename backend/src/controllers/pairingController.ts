@@ -7,6 +7,7 @@ import {
   generateKnockoutRoundOne,
   generateNextKnockoutRound,
 } from "../utils/knockout";
+import { generateSwissPairings } from "../utils/swiss";
 
 export const startTournament = async (req: Request, res: Response) => {
   try {
@@ -161,7 +162,52 @@ const handleKnockout = async (tournament: any, res: Response) => {
 };
 
 const handleSwiss = async (tournament: any, res: Response) => {
-  return res.status(501).json({ message: "Swiss engine coming soon!" });
+  const pairings = generateSwissPairings(
+    tournament.participants,
+    [],
+    1,
+    tournament.formatType,
+  );
+
+  const matchDocuments = pairings.map((match) => {
+    if (match.isBye) {
+      return {
+        tournament: tournament._id,
+        round: match.round,
+        board: match.boardNumber,
+        whitePlayer: match.white,
+        blackPlayer: null,
+        result: "BYE",
+      };
+    }
+
+    return {
+      tournament: tournament._id,
+      round: match.round,
+      board: match.boardNumber,
+      whitePlayer: match.white,
+      blackPlayer: match.black,
+      result: "*",
+    };
+  });
+
+  await Match.insertMany(matchDocuments);
+
+  tournament.status = "Ongoing";
+  await tournament.save();
+
+  await Activity.create({
+    type: "TOURNAMENT_STARTED",
+    user: tournament.organizer,
+    tournament: tournament._id,
+    message: `Started Round 1 of ${tournament.name} (Swiss)`,
+  });
+
+  return res.status(200).json({
+    message: "Swiss Round 1 generated successfully!",
+    matchesGenerated: matchDocuments.length,
+    totalRounds: tournament.totalRounds,
+  });
 };
 
 export const advanceKnockoutRound = async (req: Request, res: Response) => {
