@@ -7,7 +7,9 @@ import AddArbiterModal from "../components/AddArbiter";
 import { Link } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { ConfirmDialog } from "../components/ConfirmDialog";
-import { TournamentPanel } from "../components/TournamentPanel"; 
+import { TournamentPanel } from "../components/TournamentPanel";
+import { type Standing } from "../components/StandingsPanel";
+
 export interface Participant {
   _id: string;
   isGuest: boolean;
@@ -67,7 +69,8 @@ export default function TournamentDetails() {
   const navigate = useNavigate();
 
   const [tournament, setTournament] = useState<Tournament | null>(null);
-  const [matches, setMatches] = useState<MatchData[]>([]); // NEW STATE
+  const [matches, setMatches] = useState<MatchData[]>([]);
+  const [standings, setStandings] = useState<Standing[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [isAddPlayerModalOpen, setIsAddPlayerModalOpen] = useState(false);
@@ -84,26 +87,26 @@ export default function TournamentDetails() {
   const { user } = useAuth();
 
   const isOrganizer = user?._id === tournament?.organizer._id;
- 
+
   const isArbiter = tournament?.arbiters?.some((a) => a._id === user?._id);
   const isRegistered = tournament?.participants.some(
     (p) => p.user?._id === user?._id,
   );
 
-  
   const currentRound =
     matches.length > 0 ? Math.max(...matches.map((m) => m.round)) : 1;
 
-  
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [tournRes, matchRes] = await Promise.all([
+        const [tournRes, matchRes, standingsRes] = await Promise.all([
           api.get(`/tournaments/${id}`),
           api.get(`/tournaments/${id}/matches`),
+          api.get(`/tournaments/${id}/standings`),
         ]);
         setTournament(tournRes.data);
         setMatches(matchRes.data);
+        setStandings(standingsRes.data);
       } catch (err) {
         const axiosError = err as AxiosError<{ message: string }>;
         const errorMessage =
@@ -120,12 +123,14 @@ export default function TournamentDetails() {
   const handleStartTournament = async () => {
     try {
       await api.post(`/tournaments/${id}/start`);
-      const [tournRes, matchRes] = await Promise.all([
+      const [tournRes, matchRes, standingsRes] = await Promise.all([
         api.get(`/tournaments/${id}`),
         api.get(`/tournaments/${id}/matches`),
+        api.get(`/tournaments/${id}/standings`),
       ]);
       setTournament(tournRes.data);
       setMatches(matchRes.data);
+      setStandings(standingsRes.data);
     } catch (err) {
       const axiosError = err as AxiosError<{ message: string }>;
       alert(
@@ -137,13 +142,14 @@ export default function TournamentDetails() {
   const handleAdvanceRound = async () => {
     try {
       await api.post(`/tournaments/${id}/advance`);
-      // Refresh to grab the new rounds
-      const [tournRes, matchRes] = await Promise.all([
+      const [tournRes, matchRes, standingsRes] = await Promise.all([
         api.get(`/tournaments/${id}`),
         api.get(`/tournaments/${id}/matches`),
+        api.get(`/tournaments/${id}/standings`),
       ]);
       setTournament(tournRes.data);
       setMatches(matchRes.data);
+      setStandings(standingsRes.data);
     } catch (err) {
       const axiosError = err as AxiosError<{ message: string }>;
       alert(
@@ -352,9 +358,8 @@ export default function TournamentDetails() {
                 </button>
               )}
 
-            
               {tournament.status === "Ongoing" &&
-                tournament.format.includes("Knockout") && (
+                !tournament.format.includes("Round Robin") && (
                   <button
                     onClick={handleAdvanceRound}
                     className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-accent text-[#0B1120] hover:brightness-110 transition-all font-black text-sm tracking-widest shadow-[0_0_15px_rgba(197,160,89,0.2)]"
@@ -398,6 +403,7 @@ export default function TournamentDetails() {
               matches={matches}
               setMatches={setMatches}
               currentRound={currentRound}
+              standings={standings} // PASS STANDINGS DOWN
             />
           </div>
         )}
@@ -552,7 +558,7 @@ export default function TournamentDetails() {
             </div>
           </div>
 
-          
+          {/* Column Right: Participants Management */}
           <div className="col-span-1 lg:col-span-8">
             <div className="bg-card border border-border rounded-2xl flex flex-col h-full overflow-hidden shadow-[inset_0_0_20px_rgba(0,0,0,0.2)]">
               <div className="p-6 border-b border-border flex items-center justify-between">
