@@ -8,6 +8,7 @@ import {
   generateNextKnockoutRound,
 } from "../utils/knockout";
 import { generateSwissPairings } from "../utils/swiss";
+import { calculateStandings } from "../utils/standings";
 
 export const startTournament = async (req: Request, res: Response) => {
   try {
@@ -254,12 +255,10 @@ export const advanceTournamentRound = async (req: Request, res: Response) => {
       (m) => m.result === "*",
     );
     if (unfinishedMatches.length > 0) {
-      return res
-        .status(400)
-        .json({
-          message:
-            "Cannot advance. All matches in the current round must be completed.",
-        });
+      return res.status(400).json({
+        message:
+          "Cannot advance. All matches in the current round must be completed.",
+      });
     }
 
     if (currentRound >= tournament.totalRounds) {
@@ -273,12 +272,10 @@ export const advanceTournamentRound = async (req: Request, res: Response) => {
         message: `${tournament.name} has concluded!`,
       });
 
-      return res
-        .status(200)
-        .json({
-          message: "Tournament completed successfully!",
-          status: "Completed",
-        });
+      return res.status(200).json({
+        message: "Tournament completed successfully!",
+        status: "Completed",
+      });
     }
 
     const nextRoundNumber = currentRound + 1;
@@ -289,12 +286,10 @@ export const advanceTournamentRound = async (req: Request, res: Response) => {
         (m) => m.result === "1/2-1/2",
       );
       if (drawnMatches.length > 0) {
-        return res
-          .status(400)
-          .json({
-            message:
-              "Knockout matches cannot end in a draw. Please resolve tiebreaks first.",
-          });
+        return res.status(400).json({
+          message:
+            "Knockout matches cannot end in a draw. Please resolve tiebreaks first.",
+        });
       }
 
       const advancingPlayers = currentRoundMatches
@@ -318,12 +313,10 @@ export const advanceTournamentRound = async (req: Request, res: Response) => {
         tournament.formatType,
       );
     } else if (tournament.format.includes("Round Robin")) {
-      return res
-        .status(400)
-        .json({
-          message:
-            "Round Robin generates all matches at the start. You do not need to advance rounds manually.",
-        });
+      return res.status(400).json({
+        message:
+          "Round Robin generates all matches at the start. You do not need to advance rounds manually.",
+      });
     }
 
     const matchDocuments = nextRoundPairings.map((match) => ({
@@ -358,5 +351,36 @@ export const advanceTournamentRound = async (req: Request, res: Response) => {
   } catch (error) {
     console.error("Error advancing tournament round:", error);
     res.status(500).json({ message: "Server error advancing tournament." });
+  }
+};
+
+export const getTournamentStandings = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const tournament = await Tournament.findById(id).populate(
+      "participants.user",
+      "firstName lastName username ratings",
+    );
+
+    if (!tournament) {
+      return res.status(404).json({ message: "Tournament not found" });
+    }
+
+    const matches = await Match.find({
+      tournament: id,
+      result: { $nin: ["*", "Pending"] },
+    });
+
+    const standings = calculateStandings(
+      tournament.participants,
+      matches,
+      tournament.formatType,
+    );
+
+    res.status(200).json(standings);
+  } catch (error) {
+    console.error("Error generating standings:", error);
+    res.status(500).json({ message: "Server error generating standings." });
   }
 };

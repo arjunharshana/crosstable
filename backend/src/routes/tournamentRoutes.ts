@@ -15,6 +15,7 @@ import {
 import {
   startTournament,
   advanceTournamentRound,
+  getTournamentStandings,
 } from "../controllers/pairingController";
 import authMiddleware from "../middleware/authMiddleware";
 import {
@@ -42,8 +43,10 @@ router.delete("/:id/remove-arbiter/:arbiterId", authMiddleware, removeArbiter);
 // Pairing routes
 router.post("/:id/start", authMiddleware, startTournament);
 router.post("/:id/advance", authMiddleware, advanceTournamentRound);
+router.get("/:id/standings", getTournamentStandings);
 
 // Match routes
-router.get("/:id/matches", authMiddleware, getTournamentMatches);
-router.put("/:id/matches/:matchId", authMiddleware, updateMatchResult);
+router.get("/:id/matches", getTournamentMatches);
+router.patch("/:id/matches/:matchId", authMiddleware, updateMatchResult);
+
 export default router;
