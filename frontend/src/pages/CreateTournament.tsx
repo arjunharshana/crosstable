@@ -2,6 +2,20 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../services/api";
 import { AxiosError } from "axios";
+import { motion, type Variants } from "motion/react"; // ADDED Variants IMPORT
+
+const containerVariants: Variants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.15 },
+  },
+};
+
+const itemVariants: Variants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } },
+};
 
 export default function CreateTournament() {
   const navigate = useNavigate();
@@ -22,6 +36,9 @@ export default function CreateTournament() {
     access: "Public",
     startDate: "",
   });
+
+  const isRoundsDisabled =
+    formData.format === "Round Robin" || formData.format === "Knockout";
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -55,6 +72,8 @@ export default function CreateTournament() {
       const finalLocation =
         formData.venueType === "Online" ? "Online" : formData.location;
 
+      const finalRounds = isRoundsDisabled ? 0 : Number(formData.totalRounds);
+
       const response = await api.post("/tournaments", {
         name: formData.name,
         description: formData.description,
@@ -63,7 +82,7 @@ export default function CreateTournament() {
         tournamentType: formData.tournamentType,
         location: finalLocation,
         timeControl: timeControlString,
-        totalRounds: Number(formData.totalRounds),
+        totalRounds: finalRounds,
         access: formData.access,
         startDate: formData.startDate || new Date().toISOString(),
       });
@@ -100,8 +119,13 @@ export default function CreateTournament() {
         }}
       ></div>
 
-      {/* Arbiter Header */}
-      <header className="h-16 border-b border-border bg-background/95 backdrop-blur-sm z-10 flex items-center justify-between px-6 shrink-0">
+      {/* Arbiter Header - Slides down */}
+      <motion.header
+        initial={{ y: -50, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
+        className="h-16 border-b border-border bg-background/95 backdrop-blur-sm z-10 flex items-center justify-between px-6 shrink-0"
+      >
         <div className="flex items-center gap-4">
           <button
             type="button"
@@ -124,20 +148,31 @@ export default function CreateTournament() {
             STATUS: <span className="text-foreground">DRAFT</span>
           </div>
         </div>
-      </header>
+      </motion.header>
 
-      {/* Main Content Area */}
-      <div className="flex-1 p-4 md:p-6  z-10">
+      {/* Main Content Area - Staggered children */}
+      <motion.div
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+        className="flex-1 p-4 md:p-6 z-10"
+      >
         <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6">
           {error && (
-            <div className="lg:col-span-12 bg-red-500/10 border border-red-500/50 text-red-500 p-4 rounded-md flex items-center gap-3">
+            <motion.div
+              variants={itemVariants}
+              className="lg:col-span-12 bg-red-500/10 border border-red-500/50 text-red-500 p-4 rounded-md flex items-center gap-3"
+            >
               <span className="material-symbols-outlined">error</span>
               {error}
-            </div>
+            </motion.div>
           )}
 
           {/* Left Column: Identification */}
-          <div className="lg:col-span-4 flex flex-col gap-4">
+          <motion.div
+            variants={itemVariants}
+            className="lg:col-span-4 flex flex-col gap-4"
+          >
             <div className="bg-card border border-border rounded-sm shadow-[inset_0_0_20px_rgba(0,0,0,0.2)] relative overflow-hidden group h-full">
               <div className="p-4 border-b border-border/50 bg-background/30 flex justify-between items-center">
                 <h2 className="text-sm font-bold text-foreground uppercase tracking-wider flex items-center gap-2">
@@ -161,7 +196,7 @@ export default function CreateTournament() {
                     name="name"
                     value={formData.name}
                     onChange={handleChange}
-                    className="w-full bg-background border border-border rounded-sm text-foreground py-1.5 px-3 text-sm focus:border-accent focus:ring-1 focus:ring-accent placeholder-muted-foreground/50"
+                    className="w-full bg-background border border-border rounded-sm text-foreground py-1.5 px-3 text-sm focus:border-accent focus:ring-1 focus:ring-accent placeholder-muted-foreground/50 transition-colors"
                     placeholder="e.g. Winter Blitz 2026"
                     type="text"
                   />
@@ -175,7 +210,7 @@ export default function CreateTournament() {
                       name="format"
                       value={formData.format}
                       onChange={handleChange}
-                      className="w-full bg-background border border-border rounded-sm text-foreground py-1.5 px-3 text-sm focus:border-accent focus:ring-1 focus:ring-accent appearance-none"
+                      className="w-full bg-background border border-border rounded-sm text-foreground py-1.5 px-3 text-sm focus:border-accent focus:ring-1 focus:ring-accent appearance-none transition-colors cursor-pointer"
                     >
                       <option value="Swiss">Swiss</option>
                       <option value="Round Robin">Round Robin</option>
@@ -190,7 +225,7 @@ export default function CreateTournament() {
                       name="formatType"
                       value={formData.formatType}
                       onChange={handleChange}
-                      className="w-full bg-background border border-border rounded-sm text-foreground py-1.5 px-3 text-sm focus:border-accent focus:ring-1 focus:ring-accent appearance-none"
+                      className="w-full bg-background border border-border rounded-sm text-foreground py-1.5 px-3 text-sm focus:border-accent focus:ring-1 focus:ring-accent appearance-none transition-colors cursor-pointer"
                     >
                       <option value="Blitz">Blitz</option>
                       <option value="Rapid">Rapid</option>
@@ -205,11 +240,11 @@ export default function CreateTournament() {
                       name="tournamentType"
                       value={formData.tournamentType}
                       onChange={handleChange}
-                      className="w-full bg-background border border-border rounded-sm text-foreground py-1.5 px-3 text-sm focus:border-accent focus:ring-1 focus:ring-accent appearance-none"
+                      className="w-full bg-background border border-border rounded-sm text-foreground py-1.5 px-3 text-sm focus:border-accent focus:ring-1 focus:ring-accent appearance-none transition-colors cursor-pointer"
                     >
                       <option value="Solo">Solo</option>
                       <option value="Team" disabled>
-                        Team (Coming Soon)
+                        Team (Soon)
                       </option>
                     </select>
                   </div>
@@ -220,32 +255,40 @@ export default function CreateTournament() {
                     Venue / Location
                   </label>
                   <div className="flex gap-4 mb-3">
-                    <label className="flex items-center gap-2 cursor-pointer text-sm text-foreground">
+                    <label className="flex items-center gap-2 cursor-pointer text-sm text-foreground group">
                       <input
                         type="radio"
                         name="venueType"
                         value="Online"
                         checked={formData.venueType === "Online"}
                         onChange={handleChange}
-                        className="text-accent bg-transparent border-muted-foreground focus:ring-0"
+                        className="text-accent bg-transparent border-muted-foreground focus:ring-0 transition-all"
                       />
-                      Online
+                      <span className="group-hover:text-accent transition-colors">
+                        Online
+                      </span>
                     </label>
-                    <label className="flex items-center gap-2 cursor-pointer text-sm text-foreground">
+                    <label className="flex items-center gap-2 cursor-pointer text-sm text-foreground group">
                       <input
                         type="radio"
                         name="venueType"
                         value="Offline"
                         checked={formData.venueType === "Offline"}
                         onChange={handleChange}
-                        className="text-accent bg-transparent border-muted-foreground focus:ring-0"
+                        className="text-accent bg-transparent border-muted-foreground focus:ring-0 transition-all"
                       />
-                      Offline
+                      <span className="group-hover:text-accent transition-colors">
+                        Offline
+                      </span>
                     </label>
                   </div>
 
                   {formData.venueType === "Offline" && (
-                    <div className="relative animate-in fade-in slide-in-from-top-1 duration-200">
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      className="relative duration-200"
+                    >
                       <span className="absolute left-3 top-1.5 text-muted-foreground material-symbols-outlined text-[18px]">
                         location_on
                       </span>
@@ -254,11 +297,11 @@ export default function CreateTournament() {
                         name="location"
                         value={formData.location}
                         onChange={handleChange}
-                        className="w-full bg-background border border-border rounded-sm text-foreground py-1.5 pl-9 pr-3 text-sm focus:border-accent focus:ring-1 focus:ring-accent"
+                        className="w-full bg-background border border-border rounded-sm text-foreground py-1.5 pl-9 pr-3 text-sm focus:border-accent focus:ring-1 focus:ring-accent transition-colors"
                         placeholder="City, Country or Venue Name"
                         type="text"
                       />
-                    </div>
+                    </motion.div>
                   )}
                 </div>
 
@@ -270,16 +313,19 @@ export default function CreateTournament() {
                     name="description"
                     value={formData.description}
                     onChange={handleChange}
-                    className="w-full bg-background border border-border rounded-sm text-foreground text-sm p-3 h-24 focus:border-accent focus:ring-1 focus:ring-accent resize-none"
+                    className="w-full bg-background border border-border rounded-sm text-foreground text-sm p-3 h-24 focus:border-accent focus:ring-1 focus:ring-accent resize-none transition-colors"
                     placeholder="Enter tournament details..."
                   ></textarea>
                 </div>
               </div>
             </div>
-          </div>
+          </motion.div>
 
           {/* Right Column: Format & Rules */}
-          <div className="lg:col-span-8 flex flex-col gap-4">
+          <motion.div
+            variants={itemVariants}
+            className="lg:col-span-8 flex flex-col gap-4"
+          >
             <div className="bg-card border border-border rounded-sm shadow-[inset_0_0_20px_rgba(0,0,0,0.2)] h-full">
               <div className="p-4 border-b border-border/50 bg-background/30 flex justify-between items-center">
                 <h2 className="text-sm font-bold text-foreground uppercase tracking-wider flex items-center gap-2">
@@ -318,7 +364,7 @@ export default function CreateTournament() {
                         name="timeControlBase"
                         value={formData.timeControlBase}
                         onChange={handleChange}
-                        className="w-full bg-background border border-border rounded-sm text-foreground py-1.5 px-3 text-sm font-mono text-center focus:border-accent focus:ring-1 focus:ring-accent"
+                        className="w-full bg-background border border-border rounded-sm text-foreground py-1.5 px-3 text-sm font-mono text-center focus:border-accent focus:ring-1 focus:ring-accent transition-colors"
                         type="number"
                         min="1"
                       />
@@ -332,7 +378,7 @@ export default function CreateTournament() {
                         name="timeControlIncrement"
                         value={formData.timeControlIncrement}
                         onChange={handleChange}
-                        className="w-full bg-background border border-border rounded-sm text-foreground py-1.5 px-3 text-sm font-mono text-center focus:border-accent focus:ring-1 focus:ring-accent"
+                        className="w-full bg-background border border-border rounded-sm text-foreground py-1.5 px-3 text-sm font-mono text-center focus:border-accent focus:ring-1 focus:ring-accent transition-colors"
                         type="number"
                         min="0"
                       />
@@ -351,27 +397,43 @@ export default function CreateTournament() {
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="text-xs uppercase tracking-widest text-muted-foreground mb-1 font-semibold block">
+                      <label
+                        className={`text-xs uppercase tracking-widest mb-1 font-semibold block flex justify-between items-center ${isRoundsDisabled ? "text-muted-foreground/50" : "text-muted-foreground"}`}
+                      >
                         Rounds
+                        {isRoundsDisabled && (
+                          <span className="text-[9px] text-accent/80 normal-case">
+                            (Auto)
+                          </span>
+                        )}
                       </label>
-                      <input
-                        required
-                        name="totalRounds"
-                        value={formData.totalRounds}
-                        onChange={handleChange}
-                        className="w-full bg-background border border-border rounded-sm text-foreground py-1.5 px-3 text-sm font-mono focus:border-accent focus:ring-1 focus:ring-accent"
-                        type="number"
-                        min="1"
-                      />
+
+                      {/* CONDITIONAL ROUNDS INPUT */}
+                      {isRoundsDisabled ? (
+                        <input
+                          disabled
+                          value="Auto-calculated"
+                          className="w-full bg-background border border-border/30 rounded-sm text-muted-foreground/60 py-1.5 px-3 text-sm font-mono cursor-not-allowed italic"
+                          type="text"
+                        />
+                      ) : (
+                        <input
+                          required
+                          name="totalRounds"
+                          value={formData.totalRounds}
+                          onChange={handleChange}
+                          className="w-full bg-background border border-border rounded-sm text-foreground py-1.5 px-3 text-sm font-mono focus:border-accent focus:ring-1 focus:ring-accent transition-colors"
+                          type="number"
+                          min="1"
+                        />
+                      )}
                     </div>
                     <div>
                       <label className="text-xs uppercase tracking-widest text-muted-foreground mb-1 font-semibold block">
                         Pairing Engine
                       </label>
-                      <select className="w-full bg-background border border-border rounded-sm text-foreground py-1.5 px-3 text-sm focus:border-accent focus:ring-1 focus:ring-accent appearance-none">
+                      <select className="w-full bg-background border border-border rounded-sm text-foreground py-1.5 px-3 text-sm focus:border-accent focus:ring-1 focus:ring-accent appearance-none transition-colors cursor-pointer">
                         <option>JaVaFo (FIDE)</option>
-                        <option>Random</option>
-                        <option>Manual</option>
                       </select>
                     </div>
                   </div>
@@ -383,7 +445,7 @@ export default function CreateTournament() {
                   </label>
                   <div className="grid grid-cols-2 gap-3">
                     <label
-                      className={`flex items-center gap-2 p-2 border rounded cursor-pointer transition-colors ${formData.access === "Public" ? "bg-accent/5 border-accent" : "bg-background border-border hover:border-accent/50"}`}
+                      className={`flex items-center gap-2 p-2 border rounded cursor-pointer transition-colors group ${formData.access === "Public" ? "bg-accent/5 border-accent" : "bg-background border-border hover:border-accent/50"}`}
                     >
                       <input
                         type="radio"
@@ -395,7 +457,7 @@ export default function CreateTournament() {
                       />
                       <div className="flex flex-col">
                         <span
-                          className={`text-xs font-bold ${formData.access === "Public" ? "text-accent" : "text-foreground"}`}
+                          className={`text-xs font-bold transition-colors ${formData.access === "Public" ? "text-accent" : "text-foreground group-hover:text-accent/80"}`}
                         >
                           Public
                         </span>
@@ -405,7 +467,7 @@ export default function CreateTournament() {
                       </div>
                     </label>
                     <label
-                      className={`flex items-center gap-2 p-2 border rounded cursor-pointer transition-colors ${formData.access === "Invite Only" ? "bg-accent/5 border-accent" : "bg-background border-border hover:border-accent/50"}`}
+                      className={`flex items-center gap-2 p-2 border rounded cursor-pointer transition-colors group ${formData.access === "Invite Only" ? "bg-accent/5 border-accent" : "bg-background border-border hover:border-accent/50"}`}
                     >
                       <input
                         type="radio"
@@ -417,7 +479,7 @@ export default function CreateTournament() {
                       />
                       <div className="flex flex-col">
                         <span
-                          className={`text-xs font-bold ${formData.access === "Invite Only" ? "text-accent" : "text-foreground"}`}
+                          className={`text-xs font-bold transition-colors ${formData.access === "Invite Only" ? "text-accent" : "text-foreground group-hover:text-accent/80"}`}
                         >
                           Invite Only
                         </span>
@@ -430,10 +492,13 @@ export default function CreateTournament() {
                 </div>
               </div>
             </div>
-          </div>
+          </motion.div>
 
           {/* Bottom Bar: Scheduling */}
-          <div className="col-span-1 lg:col-span-12">
+          <motion.div
+            variants={itemVariants}
+            className="col-span-1 lg:col-span-12"
+          >
             <div className="bg-card border border-border rounded-sm shadow-[inset_0_0_20px_rgba(0,0,0,0.2)]">
               <div className="p-4 border-b border-border/50 bg-background/30 flex justify-between items-center">
                 <h2 className="text-sm font-bold text-foreground uppercase tracking-wider flex items-center gap-2">
@@ -447,13 +512,13 @@ export default function CreateTournament() {
                 <div className="flex min-w-[600px] justify-between items-center relative py-4">
                   <div className="absolute top-1/2 left-0 w-full h-0.5 bg-border -z-0"></div>
 
-                  <div className="relative z-10 flex flex-col items-center">
-                    <div className="w-8 h-8 rounded-full bg-accent border-4 border-card flex items-center justify-center mb-2 shadow-[0_0_15px_rgba(197,160,89,0.3)]">
+                  <div className="relative z-10 flex flex-col items-center group">
+                    <div className="w-8 h-8 rounded-full bg-accent border-4 border-card flex items-center justify-center mb-2 shadow-[0_0_15px_rgba(197,160,89,0.3)] group-hover:scale-110 transition-transform">
                       <span className="material-symbols-outlined text-[#0B1120] text-sm font-bold">
                         flag
                       </span>
                     </div>
-                    <div className="text-center bg-card p-2 border border-border rounded shadow-lg min-w-[140px]">
+                    <div className="text-center bg-card p-2 border border-border rounded shadow-lg min-w-[140px] transition-colors group-hover:border-accent/50">
                       <p className="text-[10px] text-accent uppercase font-bold mb-1">
                         Tournament Starts *
                       </p>
@@ -463,12 +528,12 @@ export default function CreateTournament() {
                         name="startDate"
                         value={formData.startDate}
                         onChange={handleChange}
-                        className="bg-background border border-border rounded text-foreground text-xs p-1 font-mono w-full text-center focus:border-accent focus:ring-1 focus:ring-accent [color-scheme:dark]"
+                        className="bg-background border border-border rounded text-foreground text-xs p-1 font-mono w-full text-center focus:border-accent focus:ring-1 focus:ring-accent [color-scheme:dark] transition-colors cursor-pointer"
                       />
                     </div>
                   </div>
 
-                  <div className="relative z-10 flex flex-col items-center opacity-50">
+                  <div className="relative z-10 flex flex-col items-center opacity-50 hover:opacity-80 transition-opacity">
                     <div className="w-6 h-6 rounded-full bg-border border-4 border-card mb-2"></div>
                     <div className="text-center bg-card p-2 border border-border rounded shadow-lg min-w-[120px]">
                       <p className="text-[10px] text-muted-foreground uppercase font-bold mb-1">
@@ -480,7 +545,7 @@ export default function CreateTournament() {
                     </div>
                   </div>
 
-                  <div className="relative z-10 flex flex-col items-center opacity-50">
+                  <div className="relative z-10 flex flex-col items-center opacity-50 hover:opacity-80 transition-opacity">
                     <div className="w-8 h-8 rounded-full bg-border border-4 border-card flex items-center justify-center mb-2">
                       <span className="material-symbols-outlined text-foreground text-sm">
                         trophy
@@ -498,20 +563,25 @@ export default function CreateTournament() {
                 </div>
               </div>
             </div>
-          </div>
+          </motion.div>
         </div>
-      </div>
+      </motion.div>
 
-      {/* Sticky Bottom Action Bar */}
-      <footer className="mt-8 w-full bg-background border-t border-border p-4 md:px-8 flex justify-between items-center z-10">
+      {/* Sticky Bottom Action Bar - Slides up */}
+      <motion.footer
+        initial={{ y: 50, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.5, delay: 0.3, ease: "easeOut" }}
+        className="mt-8 w-full bg-background border-t border-border p-4 md:px-8 flex justify-between items-center z-10"
+      >
         <div className="flex items-center gap-6">
           <div className="hidden md:flex flex-col">
             <span className="text-xs text-muted-foreground uppercase tracking-widest font-bold">
               Format
             </span>
             <span className="text-foreground font-mono font-medium">
-              {formData.format} • {formData.formatType} • {formData.totalRounds}{" "}
-              Rounds
+              {formData.format} • {formData.formatType} •{" "}
+              {isRoundsDisabled ? "Auto" : formData.totalRounds} Rounds
             </span>
           </div>
         </div>
@@ -519,7 +589,7 @@ export default function CreateTournament() {
           <button
             type="submit"
             disabled={loading}
-            className="bg-accent hover:bg-accent/90 text-[#0B1120] font-bold py-2.5 px-8 rounded-sm flex items-center gap-2 transition-all shadow-[0_0_15px_rgba(197,160,89,0.15)] group disabled:opacity-70 disabled:cursor-not-allowed"
+            className="bg-accent hover:bg-accent/90 text-[#0B1120] font-bold py-2.5 px-8 rounded-sm flex items-center gap-2 transition-all shadow-[0_0_15px_rgba(197,160,89,0.15)] group disabled:opacity-70 disabled:cursor-not-allowed transform hover:-translate-y-0.5 active:translate-y-0"
           >
             {loading ? (
               <span className="w-5 h-5 border-2 border-[#0B1120] border-t-transparent rounded-full animate-spin"></span>
@@ -531,7 +601,7 @@ export default function CreateTournament() {
             Launch Tournament
           </button>
         </div>
-      </footer>
+      </motion.footer>
     </form>
   );
 }
