@@ -103,9 +103,14 @@ export default function Dashboard() {
   const myOrganizing = tournaments.filter(
     (t) => isOrganizer(t) && t.status !== "Completed",
   );
-  const myPlaying = tournaments.filter(
-    (t) => isPlayer(t) && t.status !== "Completed",
-  );
+
+  // Sort playing tournaments by date so the most immediate one is first
+  const myPlaying = tournaments
+    .filter((t) => isPlayer(t) && t.status !== "Completed")
+    .sort(
+      (a, b) =>
+        new Date(a.startDate).getTime() - new Date(b.startDate).getTime(),
+    );
 
   const formatTimeAgo = (dateString: string) => {
     if (!dateString) return "Unknown";
@@ -280,57 +285,74 @@ export default function Dashboard() {
                         </td>
                       </tr>
                     ) : (
-                      myOrganizing.slice(0, 4).map((t) => (
-                        <tr
-                          key={t._id}
-                          onClick={() => navigate(`/tournaments/${t._id}`)}
-                          className="hover:bg-background/80 transition-colors group cursor-pointer"
-                        >
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="flex items-center gap-2">
-                              {t.status === "Ongoing" ? (
-                                <>
-                                  <span className="h-2 w-2 rounded-full bg-[#10B981] animate-pulse"></span>
-                                  <span className="text-[#10B981] text-xs font-bold uppercase">
-                                    Live
-                                  </span>
-                                </>
-                              ) : (
-                                <>
-                                  <span className="h-2 w-2 rounded-full bg-accent"></span>
-                                  <span className="text-accent text-xs font-bold uppercase">
-                                    Upcoming
-                                  </span>
-                                </>
+                      myOrganizing.slice(0, 4).map((t) => {
+                        // Check if the tournament date is in the past
+                        const isPast =
+                          new Date(t.startDate).getTime() <
+                          new Date().getTime();
+
+                        return (
+                          <tr
+                            key={t._id}
+                            onClick={() => navigate(`/tournaments/${t._id}`)}
+                            className="hover:bg-background/80 transition-colors group cursor-pointer"
+                          >
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="flex items-center gap-2">
+                                {t.status === "Ongoing" ? (
+                                  <>
+                                    <span className="h-2 w-2 rounded-full bg-[#10B981] animate-pulse"></span>
+                                    <span className="text-[#10B981] text-xs font-bold uppercase">
+                                      Live
+                                    </span>
+                                  </>
+                                ) : isPast ? (
+                                  <>
+                                    <span className="h-2 w-2 rounded-full bg-amber-500"></span>
+                                    <span className="text-amber-500 text-xs font-bold uppercase">
+                                      Overdue
+                                    </span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <span className="h-2 w-2 rounded-full bg-accent"></span>
+                                    <span className="text-accent text-xs font-bold uppercase">
+                                      Upcoming
+                                    </span>
+                                  </>
+                                )}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="font-medium text-foreground group-hover:text-accent transition-colors">
+                                {t.name}
+                              </div>
+                              <div className="text-xs text-muted-foreground">
+                                {t.location || "Online"}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-muted-foreground font-mono">
+                              {new Date(t.startDate).toLocaleDateString(
+                                "en-US",
+                                {
+                                  month: "short",
+                                  day: "numeric",
+                                },
                               )}
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="font-medium text-foreground group-hover:text-accent transition-colors">
-                              {t.name}
-                            </div>
-                            <div className="text-xs text-muted-foreground">
-                              {t.location || "Online"}
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-muted-foreground font-mono">
-                            {new Date(t.startDate).toLocaleDateString("en-US", {
-                              month: "short",
-                              day: "numeric",
-                            })}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-right text-foreground font-mono">
-                            {t.participants?.length || 0}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-right">
-                            <button className="text-muted-foreground hover:text-foreground transition-colors">
-                              <span className="material-symbols-outlined text-lg">
-                                arrow_forward
-                              </span>
-                            </button>
-                          </td>
-                        </tr>
-                      ))
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-right text-foreground font-mono">
+                              {t.participants?.length || 0}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-right">
+                              <button className="text-muted-foreground hover:text-foreground transition-colors">
+                                <span className="material-symbols-outlined text-lg">
+                                  arrow_forward
+                                </span>
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })
                     )}
                   </tbody>
                 </table>
@@ -425,11 +447,19 @@ export default function Dashboard() {
                     {myPlaying[0].name}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    Waiting for pairings...
+                    {new Date(myPlaying[0].startDate).getTime() <
+                    new Date().getTime()
+                      ? "Start delayed by organizer..."
+                      : "Waiting for pairings..."}
                   </p>
                 </div>
-                <div className="bg-background px-2 py-1 rounded text-[10px] font-mono text-[#10B981] border border-border flex items-center gap-1 shadow-sm">
-                  PENDING
+                <div
+                  className={`bg-background px-2 py-1 rounded text-[10px] font-mono border border-border flex items-center gap-1 shadow-sm ${new Date(myPlaying[0].startDate).getTime() < new Date().getTime() ? "text-amber-500" : "text-[#10B981]"}`}
+                >
+                  {new Date(myPlaying[0].startDate).getTime() <
+                  new Date().getTime()
+                    ? "OVERDUE"
+                    : "PENDING"}
                 </div>
               </div>
 
