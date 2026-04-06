@@ -1,5 +1,3 @@
-import React from "react";
-
 export interface PlayerStats {
   id: string;
   name: string;
