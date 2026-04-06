@@ -16,7 +16,11 @@ app.use(cookieParser());
 
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || "http://localhost:5173", // Frontend URL
+    origin: [
+      "http://localhost:5173",
+      "https://crosstable.app",
+      "https://www.crosstable.app",
+    ],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
   }),
