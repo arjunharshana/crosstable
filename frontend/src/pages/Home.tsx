@@ -175,11 +175,6 @@ export default function Home() {
     },
   ];
 
-  const badgeItems: { icon: string; label: string }[] = [
-    { icon: "verified_user", label: "FIDE Compliant" },
-    { icon: "database", label: "99.99% Uptime" },
-  ];
-
   return (
     <div className="bg-background text-foreground overflow-x-hidden selection:bg-accent/30 selection:text-primary font-sans">
       {/* Navigation */}
@@ -366,27 +361,7 @@ export default function Home() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.85, duration: 0.6 }}
-              >
-                {badgeItems.map(({ icon, label }, i) => (
-                  <motion.div
-                    key={label}
-                    className="flex items-center gap-2"
-                    initial={{ opacity: 0, scale: 0.85 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{
-                      delay: 0.9 + i * 0.12,
-                      type: "spring",
-                      stiffness: 260,
-                    }}
-                    whileHover={{ scale: 1.06 }}
-                  >
-                    <span className="material-symbols-outlined text-accent">
-                      {icon}
-                    </span>
-                    <span>{label}</span>
-                  </motion.div>
-                ))}
-              </motion.div>
+              ></motion.div>
             </div>
 
             {/* Visual Element */}
