@@ -232,43 +232,36 @@ export default function Settings() {
                     </label>
                     <div className="relative">
                       <span className="absolute left-3 top-2.5 text-muted-foreground material-symbols-outlined text-lg group-focus-within:text-accent transition-colors">
-                        location_on
+                        flag
                       </span>
-                      <div className="group">
-                        <div className="relative">
-                          <span className="absolute left-3 top-2.5 text-muted-foreground material-symbols-outlined text-lg group-focus-within:text-accent transition-colors">
-                            flag
-                          </span>
 
-                          <select
-                            name="country"
-                            value={formData.country}
-                            onChange={handleChange}
-                            className="w-full bg-background border border-border text-foreground font-mono rounded-md py-2.5 pl-10 pr-8 focus:ring-1 focus:outline-none focus:border-accent focus:ring-accent transition-colors appearance-none"
-                          >
-                            <option value="" disabled>
-                              Select Federation...
-                            </option>
-                            <option value="IND">IND - India</option>
-                            <option value="USA">
-                              USA - United States of America
-                            </option>
-                            <option value="NOR">NOR - Norway</option>
-                            <option value="ENG">ENG - England</option>
-                            <option value="GER">GER - Germany</option>
-                            <option value="FRA">FRA - France</option>
-                            <option value="CHN">CHN - China</option>
-                            <option value="UZB">UZB - Uzbekistan</option>
-                            <option value="NED">NED - Netherlands</option>
-                            <option value="ESP">ESP - Spain</option>
-                          </select>
+                      <select
+                        name="country"
+                        value={formData.country}
+                        onChange={handleChange}
+                        className="w-full bg-background border border-border text-foreground font-mono rounded-md py-2.5 pl-10 pr-8 focus:ring-1 focus:outline-none focus:border-accent focus:ring-accent transition-colors appearance-none"
+                      >
+                        <option value="" disabled>
+                          Select Federation...
+                        </option>
+                        <option value="IND">IND - India</option>
+                        <option value="USA">
+                          USA - United States of America
+                        </option>
+                        <option value="NOR">NOR - Norway</option>
+                        <option value="ENG">ENG - England</option>
+                        <option value="GER">GER - Germany</option>
+                        <option value="FRA">FRA - France</option>
+                        <option value="CHN">CHN - China</option>
+                        <option value="UZB">UZB - Uzbekistan</option>
+                        <option value="NED">NED - Netherlands</option>
+                        <option value="ESP">ESP - Spain</option>
+                      </select>
 
-                          {/* Dropdown arrow icon */}
-                          <span className="absolute right-3 top-2.5 text-muted-foreground material-symbols-outlined pointer-events-none group-focus-within:text-accent">
-                            arrow_drop_down
-                          </span>
-                        </div>
-                      </div>
+                      {/* Dropdown arrow icon */}
+                      <span className="absolute right-3 top-2.5 text-muted-foreground material-symbols-outlined pointer-events-none group-focus-within:text-accent">
+                        arrow_drop_down
+                      </span>
                     </div>
                   </div>
 
@@ -294,6 +287,7 @@ export default function Settings() {
                   </div>
                 </div>
               </div>
+
               {/* Regional Settings */}
               <div className="bg-card border border-border rounded-md p-6 md:p-8 shadow-[inset_0_0_20px_rgba(0,0,0,0.1)] mb-8">
                 <h2 className="text-lg font-serif font-bold text-foreground mb-6">
@@ -402,46 +396,62 @@ export default function Settings() {
               </div>
 
               {/* Chess.com API Verification Block */}
-              <div className="bg-card border border-border rounded-md p-6 md:p-8 relative group hover:border-accent/30 transition-all mb-8 max-w-md">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="h-10 w-10 bg-[#7FA650] rounded-md flex items-center justify-center text-white shadow-lg">
+              <div className="bg-card border border-border rounded-md shadow-[inset_0_0_20px_rgba(0,0,0,0.2)] relative overflow-hidden mb-8">
+                {/* Chess Pawn Watermark */}
+                <div className="absolute top-0 right-0 p-8 opacity-[0.03] pointer-events-none">
+                  <span className="material-symbols-outlined text-9xl">
+                    chess_pawn
+                  </span>
+                </div>
+
+                <div className="p-6 md:p-8 border-b border-border/50 flex justify-between items-start relative z-10">
+                  <div>
+                    <h2 className="text-xl font-serif font-bold text-foreground mb-1">
+                      Chess.com Link
+                    </h2>
+                    <p className="text-sm text-muted-foreground max-w-sm">
+                      Connect your Chess.com account to sync your rapid and
+                      blitz ratings directly to your CrossTable profile.
+                    </p>
+                  </div>
+                  {/* Optional indicator badge */}
+                  <div className="h-10 w-10 bg-[#7FA650] rounded-md flex items-center justify-center text-white shadow-lg shrink-0 hidden md:flex">
                     <span className="material-symbols-outlined">
                       chess_pawn
                     </span>
                   </div>
-                  <div>
-                    <h3 className="font-bold text-foreground text-sm">
-                      Chess.com Verification
-                    </h3>
-                    <p className="text-[10px] text-muted-foreground">
-                      Real-time API check
-                    </p>
-                  </div>
                 </div>
 
-                <div className="flex flex-col gap-3">
-                  <div className="relative">
-                    <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">
-                      Username
-                    </label>
-                    <input
-                      name="chesscomUsername"
-                      value={formData.chesscomUsername}
-                      onChange={handleChange}
-                      className="w-full bg-background border border-border text-foreground font-mono text-sm rounded-md py-2.5 px-3 focus:outline-none focus:ring-1 focus:border-[#7FA650] focus:ring-[#7FA650] transition-colors"
-                      type="text"
-                      placeholder="Enter username"
-                    />
+                <div className="p-6 md:p-8 relative z-10 max-w-md">
+                  <div className="flex flex-col gap-4">
+                    <div className="group">
+                      <label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 group-focus-within:text-[#7FA650] transition-colors">
+                        Username
+                      </label>
+                      <div className="relative">
+                        <span className="absolute left-3 top-2.5 text-muted-foreground material-symbols-outlined text-lg group-focus-within:text-[#7FA650] transition-colors">
+                          account_circle
+                        </span>
+                        <input
+                          name="chesscomUsername"
+                          value={formData.chesscomUsername}
+                          onChange={handleChange}
+                          className="w-full bg-background border border-border text-foreground font-mono rounded-md py-2.5 pl-10 pr-4 focus:ring-1 focus:outline-none focus:border-[#7FA650] focus:ring-[#7FA650] transition-colors"
+                          type="text"
+                          placeholder="Enter username"
+                        />
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      className="w-full bg-[#7FA650] hover:bg-[#6D8E45] text-white font-bold py-2.5 px-4 rounded-md transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_15px_rgba(127,166,80,0.15)] mt-2"
+                    >
+                      <span className="material-symbols-outlined text-lg">
+                        sync
+                      </span>
+                      Verify & Sync Account
+                    </button>
                   </div>
-                  <button
-                    type="button"
-                    className="w-full bg-[#7FA650] hover:bg-[#6D8E45] text-white font-bold py-2.5 px-4 rounded-md transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <span className="material-symbols-outlined text-lg">
-                      check_circle
-                    </span>
-                    Verify & Link Account
-                  </button>
                 </div>
               </div>
 
@@ -450,12 +460,16 @@ export default function Settings() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="bg-accent hover:bg-accent/90 text-[#0B1120] font-bold py-2.5 px-8 rounded-md shadow-[0_0_15px_rgba(197,160,89,0.15)] transition-all flex items-center gap-2"
+                  className="bg-accent hover:bg-accent/90 text-[#0B1120] font-bold py-2.5 px-8 rounded-md shadow-[0_0_15px_rgba(197,160,89,0.15)] transition-all flex items-center gap-2 transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <span className="material-symbols-outlined text-lg">
-                    save
-                  </span>
-                  Save Identity
+                  {loading ? (
+                    <span className="w-5 h-5 border-2 border-[#0B1120] border-t-transparent rounded-full animate-spin"></span>
+                  ) : (
+                    <span className="material-symbols-outlined text-lg">
+                      save
+                    </span>
+                  )}
+                  {loading ? "Saving..." : "Save Identity"}
                 </button>
               </div>
             </div>
