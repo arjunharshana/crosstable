@@ -59,3 +59,21 @@ export const updateMatchResult = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Server error updating match." });
   }
 };
+
+export const getMyGames = async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).user._id || (req as any).user.id;
+
+    const matches = await Match.find({
+      $or: [{ whitePlayer: userId }, { blackPlayer: userId }],
+    })
+
+      .populate("whitePlayer", "name rating title")
+      .populate("blackPlayer", "name rating title")
+      .sort({ createdAt: -1 });
+    res.status(200).json(matches);
+  } catch (error) {
+    console.error("Error fetching user games:", error);
+    res.status(500).json({ message: "Server error fetching your games." });
+  }
+};

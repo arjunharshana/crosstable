@@ -75,7 +75,7 @@ export default function Register() {
           <div className="flex justify-between items-center h-24">
             <div className="flex items-center gap-3">
               <Link to="/">
-                <Logo className="h-16" />
+                <Logo className="h-12" />
               </Link>
             </div>
             <div className="flex items-center gap-4">

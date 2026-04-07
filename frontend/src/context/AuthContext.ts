@@ -11,6 +11,7 @@ export interface User {
   fideId?: string;
   chesscomUsername?: string;
   timezone?: string;
+  rating?: number;
 }
 
 export interface AuthContextType {

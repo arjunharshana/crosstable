@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect } from "react";
 import { Logo } from "../components/Logo";
 import { ThemeToggle } from "../components/ThemeToggle";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   motion,
   useScroll,
@@ -79,6 +79,7 @@ function FeatureCard({ feature, index }: FeatureCardProps) {
 }
 
 export default function Home() {
+  const navigate = useNavigate();
   const heroRef = useRef<HTMLDivElement>(null);
   const featuresRef = useRef<HTMLDivElement>(null);
   const ctaRef = useRef<HTMLDivElement>(null);
@@ -123,6 +124,11 @@ export default function Home() {
     }, 2000);
     return () => clearInterval(id);
   }, []);
+
+  const scrollToFeatures = (e?: React.MouseEvent) => {
+    if (e) e.preventDefault();
+    document.getElementById("features")?.scrollIntoView({ behavior: "smooth" });
+  };
 
   const navVariants: Variants = {
     hidden: { y: -100, opacity: 0 },
@@ -186,7 +192,6 @@ export default function Home() {
       >
         <div className="max-w-[1500px] mx-auto px-6 sm:px-8 lg:px-12">
           <div className="flex justify-between items-center h-24">
-            {" "}
             <motion.div
               className="flex items-center gap-3"
               initial={{ opacity: 0, x: -20 }}
@@ -201,7 +206,14 @@ export default function Home() {
                   <motion.a
                     key={label}
                     className="text-sm font-medium text-muted-foreground hover:text-accent transition-colors uppercase tracking-wide relative"
-                    href={`#${label.toLowerCase()}`}
+                    href={
+                      label === "Features"
+                        ? "#features"
+                        : `#${label.toLowerCase()}`
+                    }
+                    onClick={
+                      label === "Features" ? scrollToFeatures : undefined
+                    }
                     initial={{ opacity: 0, y: -12 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.3 + i * 0.08, duration: 0.4 }}
@@ -310,6 +322,7 @@ export default function Home() {
                 animate="visible"
               >
                 <motion.button
+                  onClick={() => navigate("/login")}
                   className="bg-primary hover:bg-primary/90 text-primary-foreground text-sm xl:text-base uppercase tracking-wider font-semibold px-8 py-4 rounded transition-all shadow-md flex items-center gap-3 group relative overflow-hidden"
                   whileHover={{
                     scale: 1.03,
@@ -337,6 +350,7 @@ export default function Home() {
                   </motion.span>
                 </motion.button>
                 <motion.button
+                  onClick={scrollToFeatures}
                   className="bg-transparent hover:bg-accent/10 text-primary border border-accent text-sm xl:text-base uppercase tracking-wider font-semibold px-8 py-4 rounded transition-all flex items-center gap-3"
                   whileHover={{ scale: 1.03 }}
                   whileTap={{ scale: 0.97 }}
@@ -350,18 +364,11 @@ export default function Home() {
                       ease: "easeInOut",
                     }}
                   >
-                    play_circle
+                    explore
                   </motion.span>
-                  Watch Demo
+                  Explore Features
                 </motion.button>
               </motion.div>
-
-              <motion.div
-                className="flex items-center gap-6 text-sm text-muted-foreground pt-6 border-t border-border mt-2"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.85, duration: 0.6 }}
-              ></motion.div>
             </div>
 
             {/* Visual Element */}
@@ -459,7 +466,11 @@ export default function Home() {
       </div>
 
       {/* Grid Features */}
-      <div ref={featuresRef} className="bg-card py-24 border-y border-border">
+      <div
+        id="features"
+        ref={featuresRef}
+        className="bg-card py-24 border-y border-border"
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             className="text-center max-w-3xl mx-auto mb-20"
@@ -489,7 +500,6 @@ export default function Home() {
         ref={ctaRef}
         className="py-24 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white relative overflow-hidden border-t border-border"
       >
-        {/* Subtle texture overlay */}
         <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-5 mix-blend-overlay"></div>
 
         <motion.div
@@ -542,6 +552,7 @@ export default function Home() {
             transition={{ duration: 0.6, delay: 0.24 }}
           >
             <motion.button
+              onClick={() => navigate("/login")}
               className="bg-[#C5A059] hover:bg-[#B08D4B] text-[#0B0F19] text-lg font-bold px-10 py-4 rounded transition-all shadow-lg relative overflow-hidden"
               whileHover={{
                 scale: 1.05,
@@ -560,6 +571,7 @@ export default function Home() {
             </motion.button>
 
             <motion.button
+              onClick={scrollToFeatures}
               className="bg-transparent hover:bg-white/5 text-white border border-slate-700 hover:border-slate-500 text-lg font-medium px-10 py-4 rounded transition-all flex items-center justify-center gap-2"
               whileHover={{ scale: 1.04 }}
               whileTap={{ scale: 0.97 }}
@@ -612,7 +624,11 @@ export default function Home() {
                   whileHover={{ x: 5 }}
                   transition={{ type: "spring", stiffness: 400 }}
                 >
-                  <a className="hover:text-accent transition-colors" href="#">
+                  <a
+                    className="hover:text-accent transition-colors"
+                    href="#features"
+                    onClick={scrollToFeatures}
+                  >
                     Features
                   </a>
                 </motion.li>
@@ -620,7 +636,10 @@ export default function Home() {
                   whileHover={{ x: 5 }}
                   transition={{ type: "spring", stiffness: 400 }}
                 >
-                  <a className="hover:text-accent transition-colors" href="#">
+                  <a
+                    className="hover:text-accent transition-colors"
+                    href="#pricing"
+                  >
                     Pricing
                   </a>
                 </motion.li>

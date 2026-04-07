@@ -43,7 +43,6 @@ export default function Login() {
 
   return (
     <div className="bg-background text-foreground h-screen flex flex-col font-sans overflow-hidden">
-      {/* Navbar - Identical to Home/Register */}
       <nav className="fixed top-0 w-full z-50 bg-background/90 backdrop-blur-md border-b border-border">
         <div className="max-w-[1500px] mx-auto px-6 sm:px-8 lg:px-12">
           <div className="flex justify-between items-center h-24">

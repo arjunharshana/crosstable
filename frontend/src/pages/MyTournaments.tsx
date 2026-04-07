@@ -319,7 +319,6 @@ export default function MyTournaments() {
           >
             {/* The Ticket Container */}
             <div className="flex-1 flex flex-col rounded-md overflow-hidden bg-gradient-to-br from-card to-background border border-border relative z-10 before:absolute before:content-[''] before:h-5 before:w-5 before:bg-background before:rounded-full before:top-1/2 before:-translate-y-1/2 before:-left-2.5 before:shadow-[inset_-2px_0_3px_rgba(0,0,0,0.1)] before:border-r before:border-border before:z-20 after:absolute after:content-[''] after:h-5 after:w-5 after:bg-background after:rounded-full after:top-1/2 after:-translate-y-1/2 after:-right-2.5 after:shadow-[inset_2px_0_3px_rgba(0,0,0,0.1)] after:border-l after:border-border after:z-20">
-              {/* Top Half of Ticket */}
               <div className="p-6 pb-5 border-b-2 border-dashed border-border/60 relative">
                 <div className="absolute top-0 right-0 p-3 opacity-[0.03] pointer-events-none">
                   <span className="material-symbols-outlined text-8xl text-foreground">
@@ -465,7 +464,6 @@ export default function MyTournaments() {
           </button>
         )}
 
-        {/* Empty State Handler */}
         {currentEvents.length === 0 && (
           <div className="col-span-full py-16 text-center bg-card/20 border border-dashed border-border rounded-md">
             <span className="material-symbols-outlined text-4xl text-muted-foreground mb-4">
