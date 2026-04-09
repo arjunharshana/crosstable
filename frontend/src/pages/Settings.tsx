@@ -353,140 +353,21 @@ export default function Settings() {
               </div>
             </div>
           )}
-
-          {/* CHESS IDENTITY TAB */}
-          {activeTab === "Chess Identity" && (
-            <div className="animate-in fade-in slide-in-from-right-4 duration-500">
-              {/* FIDE ID Block */}
-              <div className="bg-card border border-border rounded-md shadow-[inset_0_0_20px_rgba(0,0,0,0.2)] relative overflow-hidden mb-8">
-                <div className="absolute top-0 right-0 p-8 opacity-[0.03] pointer-events-none">
-                  <span className="material-symbols-outlined text-9xl">
-                    fingerprint
-                  </span>
-                </div>
-                <div className="p-6 md:p-8 border-b border-border/50">
-                  <h2 className="text-xl font-serif font-bold text-foreground mb-1">
-                    Official FIDE Identity
-                  </h2>
-                  <p className="text-sm text-muted-foreground">
-                    Enter your FIDE ID. Verification will be handled manually by
-                    admins.
-                  </p>
-                </div>
-                <div className="p-6 md:p-8 relative z-10 max-w-md">
-                  <div className="group">
-                    <label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 group-focus-within:text-accent transition-colors">
-                      FIDE ID
-                    </label>
-                    <div className="relative">
-                      <span className="absolute left-3 top-2.5 text-muted-foreground material-symbols-outlined text-lg group-focus-within:text-accent transition-colors">
-                        language
-                      </span>
-                      <input
-                        name="fideId"
-                        value={formData.fideId}
-                        onChange={handleChange}
-                        className="w-full bg-background border border-border text-foreground font-mono rounded-md py-2.5 pl-10 pr-4 focus:ring-1 focus:outline-none focus:border-accent focus:ring-accent transition-colors"
-                        placeholder="e.g. 15000000"
-                        type="text"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Chess.com API Verification Block */}
-              <div className="bg-card border border-border rounded-md shadow-[inset_0_0_20px_rgba(0,0,0,0.2)] relative overflow-hidden mb-8">
-                {/* Chess Pawn Watermark */}
-                <div className="absolute top-0 right-0 p-8 opacity-[0.03] pointer-events-none">
-                  <span className="material-symbols-outlined text-9xl">
-                    chess_pawn
-                  </span>
-                </div>
-
-                <div className="p-6 md:p-8 border-b border-border/50 flex justify-between items-start relative z-10">
-                  <div>
-                    <h2 className="text-xl font-serif font-bold text-foreground mb-1">
-                      Chess.com Link
-                    </h2>
-                    <p className="text-sm text-muted-foreground max-w-sm">
-                      Connect your Chess.com account to sync your rapid and
-                      blitz ratings directly to your CrossTable profile.
-                    </p>
-                  </div>
-                  {/* Optional indicator badge */}
-                  <div className="h-10 w-10 bg-[#7FA650] rounded-md flex items-center justify-center text-white shadow-lg shrink-0 hidden md:flex">
-                    <span className="material-symbols-outlined">
-                      chess_pawn
-                    </span>
-                  </div>
-                </div>
-
-                <div className="p-6 md:p-8 relative z-10 max-w-md">
-                  <div className="flex flex-col gap-4">
-                    <div className="group">
-                      <label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 group-focus-within:text-[#7FA650] transition-colors">
-                        Username
-                      </label>
-                      <div className="relative">
-                        <span className="absolute left-3 top-2.5 text-muted-foreground material-symbols-outlined text-lg group-focus-within:text-[#7FA650] transition-colors">
-                          account_circle
-                        </span>
-                        <input
-                          name="chesscomUsername"
-                          value={formData.chesscomUsername}
-                          onChange={handleChange}
-                          className="w-full bg-background border border-border text-foreground font-mono rounded-md py-2.5 pl-10 pr-4 focus:ring-1 focus:outline-none focus:border-[#7FA650] focus:ring-[#7FA650] transition-colors"
-                          type="text"
-                          placeholder="Enter username"
-                        />
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      className="w-full bg-[#7FA650] hover:bg-[#6D8E45] text-white font-bold py-2.5 px-4 rounded-md transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_15px_rgba(127,166,80,0.15)] mt-2"
-                    >
-                      <span className="material-symbols-outlined text-lg">
-                        sync
-                      </span>
-                      Verify & Sync Account
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Save Button for FIDE ID */}
-              <div className="flex items-center justify-end gap-4 pb-8">
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="bg-accent hover:bg-accent/90 text-[#0B1120] font-bold py-2.5 px-8 rounded-md shadow-[0_0_15px_rgba(197,160,89,0.15)] transition-all flex items-center gap-2 transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {loading ? (
-                    <span className="w-5 h-5 border-2 border-[#0B1120] border-t-transparent rounded-full animate-spin"></span>
-                  ) : (
-                    <span className="material-symbols-outlined text-lg">
-                      save
-                    </span>
-                  )}
-                  {loading ? "Saving..." : "Save Identity"}
-                </button>
-              </div>
-            </div>
-          )}
         </form>
 
-        {/* Other Tabs */}
-        {["Notifications", "Security"].includes(activeTab) && (
+        {/* Other Tabs (Identity, Notifications, Security) */}
+        {["Chess Identity", "Notifications", "Security"].includes(
+          activeTab,
+        ) && (
           <div className="py-12 text-center border border-dashed border-border rounded-md animate-in fade-in">
             <span className="material-symbols-outlined text-muted-foreground text-4xl mb-3">
               construction
             </span>
             <h3 className="text-lg font-medium text-foreground">
-              {activeTab} Settings
+              {activeTab} Integration
             </h3>
             <p className="text-sm text-muted-foreground mt-1">
-              This section is currently under development.
+              This module is currently being built out for the v2 release.
             </p>
           </div>
         )}
