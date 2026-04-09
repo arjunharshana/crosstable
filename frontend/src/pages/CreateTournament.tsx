@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../services/api";
 import { AxiosError } from "axios";
-import { motion, type Variants } from "motion/react"; // ADDED Variants IMPORT
+import { motion, type Variants } from "motion/react";
 
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
@@ -25,13 +25,13 @@ export default function CreateTournament() {
   const [formData, setFormData] = useState({
     name: "",
     format: "Swiss",
-    formatType: "Blitz",
+    formatType: "Blitz", // Default
     tournamentType: "Solo",
     venueType: "Online",
     location: "",
     description: "",
-    timeControlBase: "3",
-    timeControlIncrement: "2",
+    timeControlBase: "3", // Default Blitz base
+    timeControlIncrement: "2", // Default Blitz inc
     totalRounds: "9",
     access: "Public",
     startDate: "",
@@ -45,7 +45,56 @@ export default function CreateTournament() {
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
     >,
   ) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+
+    // Intercept formatType changes to auto-fill time controls
+    if (name === "formatType") {
+      let base = formData.timeControlBase;
+      let inc = formData.timeControlIncrement;
+
+      switch (value) {
+        case "Bullet":
+          base = "1";
+          inc = "1";
+          break;
+        case "Blitz":
+          base = "3";
+          inc = "2";
+          break;
+        case "Rapid":
+          base = "15";
+          inc = "10";
+          break;
+        case "Classical":
+          base = "90";
+          inc = "30";
+          break;
+        default:
+          break;
+      }
+
+      setFormData({
+        ...formData,
+        [name]: value,
+        timeControlBase: base,
+        timeControlIncrement: inc,
+      });
+    } else {
+      // Standard handler for all other inputs
+      setFormData({ ...formData, [name]: value });
+    }
+  };
+
+  const loadStandardPreset = () => {
+    setFormData({
+      ...formData,
+      format: "Swiss",
+      formatType: "Blitz",
+      timeControlBase: "3",
+      timeControlIncrement: "2",
+      totalRounds: "9",
+      access: "Public",
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -227,6 +276,7 @@ export default function CreateTournament() {
                       onChange={handleChange}
                       className="w-full bg-background border border-border rounded-sm text-foreground py-1.5 px-3 text-sm focus:border-accent focus:ring-1 focus:ring-accent appearance-none transition-colors cursor-pointer"
                     >
+                      <option value="Bullet">Bullet</option>
                       <option value="Blitz">Blitz</option>
                       <option value="Rapid">Rapid</option>
                       <option value="Classical">Classical</option>
@@ -337,6 +387,7 @@ export default function CreateTournament() {
                 <div className="flex gap-2">
                   <button
                     type="button"
+                    onClick={loadStandardPreset}
                     className="text-[10px] bg-background border border-border px-2 py-1 rounded text-muted-foreground hover:text-foreground hover:border-accent transition-colors"
                   >
                     Load Preset
@@ -527,6 +578,7 @@ export default function CreateTournament() {
                         type="datetime-local"
                         name="startDate"
                         value={formData.startDate}
+                        min={new Date().toISOString().slice(0, 16)}
                         onChange={handleChange}
                         className="bg-background border border-border rounded text-foreground text-xs p-1 font-mono w-full text-center focus:border-accent focus:ring-1 focus:ring-accent [color-scheme:dark] transition-colors cursor-pointer"
                       />

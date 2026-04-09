@@ -25,6 +25,10 @@ interface Tournament {
 export default function Explore() {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
+
+  const [formatFilter, setFormatFilter] = useState("All");
+  const [statusFilter, setStatusFilter] = useState("All");
+
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -44,14 +48,20 @@ export default function Explore() {
     fetchTournaments();
   }, []);
 
-  // Live search filtering
   const filteredTournaments = tournaments.filter((t) => {
     const query = searchQuery.toLowerCase();
-    return (
+
+    const matchesSearch =
       t.name.toLowerCase().includes(query) ||
       t.location.toLowerCase().includes(query) ||
-      (t.organizer?.username || "").toLowerCase().includes(query)
-    );
+      (t.organizer?.username || "").toLowerCase().includes(query);
+
+    const matchesFormat =
+      formatFilter === "All" || t.formatType === formatFilter;
+
+    const matchesStatus = statusFilter === "All" || t.status === statusFilter;
+
+    return matchesSearch && matchesFormat && matchesStatus;
   });
 
   const featured =
@@ -59,7 +69,6 @@ export default function Explore() {
   const gridTournaments =
     filteredTournaments.length > 1 ? filteredTournaments.slice(1) : [];
 
-  // UI Helpers
   const formatDate = (dateString: string) => {
     if (!dateString) return "TBD";
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -102,6 +111,12 @@ export default function Explore() {
     }
   };
 
+  const resetFilters = () => {
+    setSearchQuery("");
+    setFormatFilter("All");
+    setStatusFilter("All");
+  };
+
   if (loading)
     return (
       <div className="p-8 flex justify-center">
@@ -129,17 +144,29 @@ export default function Explore() {
         <div className="hidden md:block h-6 w-px bg-border mx-1"></div>
 
         <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto hide-scrollbar">
-          <select className="bg-card border border-border text-sm text-muted-foreground rounded-md px-2 py-2 focus:border-accent focus:ring-1 focus:ring-accent focus:outline-none cursor-pointer hover:text-foreground transition-colors appearance-none min-w-[100px]">
-            <option>Format: All</option>
-            <option>Classical</option>
-            <option>Rapid</option>
-            <option>Blitz</option>
+          {/* UPDATED: Format Select */}
+          <select
+            value={formatFilter}
+            onChange={(e) => setFormatFilter(e.target.value)}
+            className={`bg-card border text-sm rounded-md px-2 py-2 focus:border-accent focus:ring-1 focus:ring-accent focus:outline-none cursor-pointer transition-colors appearance-none min-w-[100px] ${formatFilter !== "All" ? "border-accent text-accent" : "border-border text-muted-foreground hover:text-foreground"}`}
+          >
+            <option value="All">Format: All</option>
+            <option value="Bullet">Bullet</option>
+            <option value="Blitz">Blitz</option>
+            <option value="Rapid">Rapid</option>
+            <option value="Classical">Classical</option>
           </select>
-          <select className="bg-card border border-border text-sm text-muted-foreground rounded-md px-2 py-2 focus:border-accent focus:ring-1 focus:ring-accent focus:outline-none cursor-pointer hover:text-foreground transition-colors appearance-none min-w-[100px]">
-            <option>Status: All</option>
-            <option>Upcoming</option>
-            <option>Ongoing</option>
-            <option>Completed</option>
+
+          {/* UPDATED: Status Select */}
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className={`bg-card border text-sm rounded-md px-2 py-2 focus:border-accent focus:ring-1 focus:ring-accent focus:outline-none cursor-pointer transition-colors appearance-none min-w-[100px] ${statusFilter !== "All" ? "border-accent text-accent" : "border-border text-muted-foreground hover:text-foreground"}`}
+          >
+            <option value="All">Status: All</option>
+            <option value="Upcoming">Upcoming</option>
+            <option value="Ongoing">Ongoing</option>
+            <option value="Completed">Completed</option>
           </select>
         </div>
 
@@ -272,9 +299,29 @@ export default function Explore() {
 
       {/* Ticket Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+        {/* UPDATED: Empty State with Clear Filters button */}
         {gridTournaments.length === 0 && !featured && (
-          <div className="col-span-full py-12 text-center text-muted-foreground border border-dashed border-border rounded-md">
-            No tournaments found matching your search.
+          <div className="col-span-full py-16 flex flex-col items-center justify-center text-center border border-dashed border-border rounded-md bg-card/50">
+            <span className="material-symbols-outlined text-4xl text-muted-foreground mb-3">
+              search_off
+            </span>
+            <h3 className="text-lg font-bold text-foreground mb-1">
+              No tournaments found
+            </h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              Try adjusting your search or filters to find what you're looking
+              for.
+            </p>
+            {(searchQuery ||
+              formatFilter !== "All" ||
+              statusFilter !== "All") && (
+              <button
+                onClick={resetFilters}
+                className="text-xs font-bold uppercase tracking-wider bg-secondary hover:bg-secondary/80 text-foreground py-2 px-4 rounded transition-colors"
+              >
+                Clear All Filters
+              </button>
+            )}
           </div>
         )}
 
