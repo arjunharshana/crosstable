@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import axios from "axios";
 import bcrypt from "bcryptjs";
 import jwt, { TokenExpiredError } from "jsonwebtoken";
 import User from "../models/user";
@@ -227,6 +228,84 @@ const ResetPassword = async (req: Request, res: Response) => {
   }
 };
 
+//chesscom oauth routes
+const chesscomOAuthInitiate = (req: Request, res: Response) => {
+  const userId = req.query.userId as string;
+
+  if (!userId) {
+    return res
+      .status(400)
+      .json({ message: "User ID is required to link an account." });
+  }
+
+  const clientId = process.env.CHESSCOM_CLIENT_ID;
+  const redirectUri = encodeURIComponent(
+    process.env.CHESSCOM_REDIRECT_URI as string,
+  );
+
+  const authUrl = `https://chess.com/oauth/authorize?response_type=code&client_id=${clientId}&redirect_uri=${redirectUri}&state=${userId}`;
+
+  res.redirect(authUrl);
+};
+
+const chesscomOAuthCallback = async (req: Request, res: Response) => {
+  // Chess.com hands back the code AND the state (which is our userId)
+  const { code, state } = req.query;
+  const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+
+  if (!code || !state) {
+    return res.redirect(`${frontendUrl}/settings?error=Authorization_Failed`);
+  }
+
+  const userId = state as string;
+
+  try {
+    const tokenResponse = await axios.post(
+      "https://chess.com/oauth/token",
+      {
+        grant_type: "authorization_code",
+        code: code as string,
+        client_id: process.env.CHESSCOM_CLIENT_ID,
+        client_secret: process.env.CHESSCOM_CLIENT_SECRET,
+        redirect_uri: process.env.CHESSCOM_REDIRECT_URI,
+      },
+      { headers: { "Content-Type": "application/json" } },
+    );
+
+    const accessToken = tokenResponse.data.access_token;
+
+    const profileResponse = await axios.get("https://api.chess.com/v1/me", {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+
+    const chessData = profileResponse.data;
+    const chessUsername = chessData.username;
+
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.redirect(`${frontendUrl}/settings?error=User_Not_Found`);
+    }
+
+    const existingLink = await User.findOne({
+      chesscomUsername: chessUsername,
+    });
+    if (existingLink && existingLink._id.toString() !== userId) {
+      return res.redirect(
+        `${frontendUrl}/settings?error=Chess_Account_Already_Linked_To_Another_User`,
+      );
+    }
+
+    user.chesscomUsername = chessUsername;
+    await user.save();
+
+    res.redirect(`${frontendUrl}/settings?success=chesscom_linked`);
+  } catch (error) {
+    console.error("Chess.com OAuth Linking Error:", error);
+    res.redirect(`${frontendUrl}/settings?error=OAuth_Failed`);
+  }
+};
+
 export {
   RegisterUser,
   VerifyEmail,
@@ -235,4 +314,6 @@ export {
   ResendVerificationEmail,
   forgotPassword,
   ResetPassword,
+  chesscomOAuthInitiate,
+  chesscomOAuthCallback,
 };

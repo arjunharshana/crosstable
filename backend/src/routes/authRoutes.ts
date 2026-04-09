@@ -7,6 +7,8 @@ import {
   ResendVerificationEmail,
   forgotPassword,
   ResetPassword,
+  chesscomOAuthCallback,
+  chesscomOAuthInitiate,
 } from "../controllers/authController";
 import {
   validateRegistration,
@@ -35,5 +37,8 @@ router.post(
   authRateLimiter,
   ResetPassword,
 );
+
+router.get("/chesscom", rateLimiter, chesscomOAuthInitiate);
+router.get("/chesscom/callback", rateLimiter, chesscomOAuthCallback);
 
 export default router;
