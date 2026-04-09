@@ -2,6 +2,7 @@ import { useRef, useState, useEffect } from "react";
 import { Logo } from "../components/Logo";
 import { ThemeToggle } from "../components/ThemeToggle";
 import { Link, useNavigate } from "react-router-dom";
+import { ConfirmDialog } from "../components/ConfirmDialog"; // Ensure this path is correct
 import {
   motion,
   useScroll,
@@ -80,6 +81,8 @@ function FeatureCard({ feature, index }: FeatureCardProps) {
 
 export default function Home() {
   const navigate = useNavigate();
+  const [isResourcesModalOpen, setIsResourcesModalOpen] = useState(false); // Modal state added
+
   const heroRef = useRef<HTMLDivElement>(null);
   const featuresRef = useRef<HTMLDivElement>(null);
   const ctaRef = useRef<HTMLDivElement>(null);
@@ -205,15 +208,21 @@ export default function Home() {
                 (label, i) => (
                   <motion.a
                     key={label}
-                    className="text-sm font-medium text-muted-foreground hover:text-accent transition-colors uppercase tracking-wide relative"
+                    className="text-sm font-medium text-muted-foreground hover:text-accent transition-colors uppercase tracking-wide relative cursor-pointer"
                     href={
                       label === "Features"
                         ? "#features"
-                        : `#${label.toLowerCase()}`
+                        : label === "Resources"
+                          ? undefined
+                          : `#${label.toLowerCase()}`
                     }
-                    onClick={
-                      label === "Features" ? scrollToFeatures : undefined
-                    }
+                    onClick={(e) => {
+                      if (label === "Features") scrollToFeatures(e);
+                      if (label === "Resources") {
+                        e.preventDefault();
+                        setIsResourcesModalOpen(true);
+                      }
+                    }}
                     initial={{ opacity: 0, y: -12 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.3 + i * 0.08, duration: 0.4 }}
@@ -654,23 +663,17 @@ export default function Home() {
               <h4 className="font-bold text-primary mb-6 text-sm uppercase tracking-wider">
                 Resources
               </h4>
-              <ul className="space-y-3 text-sm text-muted-foreground">
-                <motion.li
-                  whileHover={{ x: 5 }}
-                  transition={{ type: "spring", stiffness: 400 }}
-                >
-                  <a className="hover:text-accent transition-colors" href="#">
+              <ul className="space-y-3 text-sm text-muted-foreground/60">
+                <li>
+                  <span className="cursor-default select-none">
                     Documentation
-                  </a>
-                </motion.li>
-                <motion.li
-                  whileHover={{ x: 5 }}
-                  transition={{ type: "spring", stiffness: 400 }}
-                >
-                  <a className="hover:text-accent transition-colors" href="#">
+                  </span>
+                </li>
+                <li>
+                  <span className="cursor-default select-none">
                     API Reference
-                  </a>
-                </motion.li>
+                  </span>
+                </li>
               </ul>
             </motion.div>
 
@@ -687,15 +690,10 @@ export default function Home() {
                   whileHover={{ x: 5 }}
                   transition={{ type: "spring", stiffness: 400 }}
                 >
-                  <a className="hover:text-accent transition-colors" href="#">
-                    About
-                  </a>
-                </motion.li>
-                <motion.li
-                  whileHover={{ x: 5 }}
-                  transition={{ type: "spring", stiffness: 400 }}
-                >
-                  <a className="hover:text-accent transition-colors" href="#">
+                  <a
+                    className="hover:text-accent transition-colors"
+                    href="mailto:support.crosstable@gmail.com"
+                  >
                     Contact
                   </a>
                 </motion.li>
@@ -720,22 +718,6 @@ export default function Home() {
                 whileTap={{ scale: 0.9 }}
                 transition={{ type: "spring", stiffness: 400 }}
               >
-                <span className="sr-only">Twitter</span>
-                <svg
-                  className="h-5 w-5"
-                  fill="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path d="M8.29 20.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0022 5.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.072 4.072 0 012.8 9.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 012 18.407a11.616 11.616 0 006.29 1.84"></path>
-                </svg>
-              </motion.a>
-              <motion.a
-                className="text-muted-foreground hover:text-primary transition-colors"
-                href="#"
-                whileHover={{ y: -4, scale: 1.2 }}
-                whileTap={{ scale: 0.9 }}
-                transition={{ type: "spring", stiffness: 400 }}
-              >
                 <span className="sr-only">GitHub</span>
                 <svg
                   className="h-5 w-5"
@@ -753,6 +735,18 @@ export default function Home() {
           </motion.div>
         </div>
       </footer>
+
+      {/* Coming Soon Modal */}
+      <ConfirmDialog
+        isOpen={isResourcesModalOpen}
+        onClose={() => setIsResourcesModalOpen(false)}
+        onConfirm={() => {}}
+        title="Coming Soon"
+        message="We're currently polishing our developer API reference and tournament organizer guides. This hub will be available shortly after our beta launch."
+        confirmText="Got It"
+        cancelText="Close"
+        isDestructive={false}
+      />
     </div>
   );
 }
