@@ -77,7 +77,8 @@ const TournamentSchema: Schema = new Schema(
     totalRounds: {
       type: Number,
       required: true,
-      min: 1,
+      min: [0, "Total rounds cannot be negative"],
+      default: 0,
     },
     currentRound: {
       type: Number,
