@@ -204,40 +204,51 @@ export default function Home() {
               <Logo className="h-12" />
             </motion.div>
             <div className="hidden md:flex items-center gap-8">
-              {(["Features", "Pricing", "Resources"] as const).map(
-                (label, i) => (
-                  <motion.a
-                    key={label}
-                    className="text-sm font-medium text-muted-foreground hover:text-accent transition-colors uppercase tracking-wide relative cursor-pointer"
-                    href={
-                      label === "Features"
-                        ? "#features"
-                        : label === "Resources"
-                          ? undefined
-                          : `#${label.toLowerCase()}`
+              {(["About", "Features", "Resources"] as const).map((label, i) => (
+                <motion.a
+                  key={label}
+                  className="text-sm font-medium text-muted-foreground hover:text-accent transition-colors uppercase tracking-wide relative cursor-pointer"
+                  href={
+                    label === "About"
+                      ? "/about"
+                      : label === "Features"
+                        ? "/#features"
+                        : undefined
+                  }
+                  onClick={(e) => {
+                    if (label === "About") {
+                      e.preventDefault();
+                      navigate("/about");
+                      window.scrollTo(0, 0); // Ensures page loads at the top
                     }
-                    onClick={(e) => {
-                      if (label === "Features") scrollToFeatures(e);
-                      if (label === "Resources") {
+                    if (label === "Features") {
+                      // Only smooth scroll if we are already on the homepage
+                      if (window.location.pathname === "/") {
                         e.preventDefault();
-                        setIsResourcesModalOpen(true);
+                        document
+                          .getElementById("features")
+                          ?.scrollIntoView({ behavior: "smooth" });
                       }
-                    }}
-                    initial={{ opacity: 0, y: -12 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.3 + i * 0.08, duration: 0.4 }}
-                    whileHover={{ y: -2 }}
-                  >
-                    {label}
-                    <motion.span
-                      className="absolute -bottom-1 left-0 h-px bg-accent"
-                      initial={{ width: 0 }}
-                      whileHover={{ width: "100%" }}
-                      transition={{ duration: 0.22 }}
-                    />
-                  </motion.a>
-                ),
-              )}
+                    }
+                    if (label === "Resources") {
+                      e.preventDefault();
+                      setIsResourcesModalOpen(true);
+                    }
+                  }}
+                  initial={{ opacity: 0, y: -12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 + i * 0.08, duration: 0.4 }}
+                  whileHover={{ y: -2 }}
+                >
+                  {label}
+                  <motion.span
+                    className="absolute -bottom-1 left-0 h-px bg-accent"
+                    initial={{ width: 0 }}
+                    whileHover={{ width: "100%" }}
+                    transition={{ duration: 0.22 }}
+                  />
+                </motion.a>
+              ))}
             </div>
             <motion.div
               className="flex items-center gap-4"
@@ -686,6 +697,18 @@ export default function Home() {
                 Company
               </h4>
               <ul className="space-y-3 text-sm text-muted-foreground">
+                <motion.li
+                  whileHover={{ x: 5 }}
+                  transition={{ type: "spring", stiffness: 400 }}
+                >
+                  <Link
+                    className="hover:text-accent transition-colors"
+                    to="/about"
+                    onClick={() => window.scrollTo(0, 0)}
+                  >
+                    About
+                  </Link>
+                </motion.li>
                 <motion.li
                   whileHover={{ x: 5 }}
                   transition={{ type: "spring", stiffness: 400 }}

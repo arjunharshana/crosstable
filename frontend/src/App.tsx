@@ -18,6 +18,7 @@ import TournamentDetails from "./pages/TournamentDetails";
 import EditTournament from "./pages/EditTournament";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
+import About from "./pages/About";
 
 function App() {
   return (
@@ -31,6 +32,7 @@ function App() {
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/terms" element={<Terms />} />
+        <Route path="/about" element={<About />} />
 
         <Route element={<ProtectedRoute />}>
           <Route element={<DashboardLayout />}>
