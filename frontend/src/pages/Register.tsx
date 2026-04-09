@@ -275,19 +275,23 @@ export default function Register() {
                       htmlFor="terms"
                     >
                       I agree to the{" "}
-                      <a
+                      <Link
                         className="text-foreground font-medium hover:underline"
-                        href="#"
+                        to="/terms"
+                        target="_blank"
+                        rel="noopener noreferrer"
                       >
                         Terms of Service
-                      </a>{" "}
+                      </Link>{" "}
                       and{" "}
-                      <a
+                      <Link
                         className="text-foreground font-medium hover:underline"
-                        href="#"
+                        to="/privacy"
+                        target="_blank"
+                        rel="noopener noreferrer"
                       >
                         Privacy Policy
-                      </a>
+                      </Link>
                       .
                     </label>
                   </div>
